@@ -10,7 +10,6 @@ class Server:
 	userList = {}
 	sock = None
 	last_time = 0
-	t = None
 	
 	def __init__(self, port):
 		print("Server running...")
@@ -20,17 +19,28 @@ class Server:
 	def ShowUserList(self):
 		system('cls')
 		print('Server running...')
+		if len(self.userList) == 0:
+			print('No connections to server...')
 		for	i in self.userList:
 			print('|\t' + i + '\t|\t' + self.userList[i][0] + '\t|\t' + str(round(self.userList[i][1])) + 'ms\t|')
-		time.sleep(0.1)
+		time.sleep(1)
 	
-	def Run(self):
-		t = Thread(name='userList',target=self.ShowUserList)
-		t.start()
-		t.run()
+	def UpdateUserList(self):
+		for i in self.userList:
+			last_time = self.userList[i][2]
+			delta = (time.time() - last_time) * 100
+			if delta >= 100:
+				print(delta)
+				self.userList.pop(i)
+				if len(self.userList) > 0:
+					continue
+				else:
+					break;
 	
-	def Stop(self):
-		t.join()
+	def RunUpdate(self):
+		while True:
+			self.ShowUserList()
+			self.UpdateUserList()
 	
 	def Recieve(self):
 		while True:
@@ -42,13 +52,10 @@ class Server:
 			msg = data[0].decode("utf-8")
 			addr = data[1]
 			
-			if not msg:
-				pass
-			else:
+			if msg:
 				arr = msg.split(":")
 				if arr[0] == "0042nop":
-					self.userList[arr[1]] = [addr[0]+':'+str(addr[1]), ping]
-					self.ShowUserList()
+					self.userList[arr[1]] = [addr[0]+':'+str(addr[1]), ping, time.time()]
 					continue
 				elif arr[0] == "createroom":
 					self.roomList[arr[1]]={'id':self.roomID,'host':addr[0],'port':int(addr[1])}
@@ -65,10 +72,9 @@ class Server:
 	def Close(self):
 		self.sock.close()
 
-try:
-	server = Server(14801)
-	server.Run()
-	server.Recieve()
-finally:
-	server.Close()
-	server.Stop()
+server = Server(14801)
+t = Thread(name='t1', target=server.RunUpdate)
+t.start()
+server.Recieve()
+server.Close()
+t.join()
