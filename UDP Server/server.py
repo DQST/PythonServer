@@ -1,6 +1,7 @@
 import socket
 import os
 import time
+import sys
 from threading import *
 
 
@@ -10,11 +11,13 @@ class Server:
 	userList = {}
 	sock = None
 	last_time = 0
+	_update_time = 1
 	
-	def __init__(self, port):
+	def __init__(self, port, time):
 		print("Server running...")
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		self.sock.bind(("", port))
+		self._update_time = time
 	
 	def cls(self):
 		os.system('cls' if os.name=='nt' else 'clear')
@@ -26,7 +29,7 @@ class Server:
 			print('No connections to server...')
 		for	i in self.userList:
 			print('|\t' + i + '\t|\t' + self.userList[i][0] + '\t|\t' + str(round(self.userList[i][1])) + 'ms\t|')
-		time.sleep(1)
+		time.sleep(self._update_time)
 	
 	def UpdateUserList(self):
 		for i in self.userList:
@@ -66,7 +69,6 @@ class Server:
 					self.Send(bytes("Add new room:" + arr[1], 'utf-8'), addr)
 					continue
 				
-				# print("[" + addr[0] + ":" + str(addr[1]) + "] > " + msg)
 				self.Send(b"Hello from UDP Python Server!", addr)
 	
 	def Send(self, msg, remoteAddr):
@@ -75,9 +77,15 @@ class Server:
 	def Close(self):
 		self.sock.close()
 
-server = Server(14801)
-t = Thread(name='t1', target=server.RunUpdate)
-t.start()
-server.Recieve()
-server.Close()
-t.join()
+if __name__ == '__main__':
+	inputData = sys.argv
+	server = None
+	if len(inputData) > 1:
+		server = Server(int(inputData[1]), int(inputData[2]))
+	else:
+		server = Server(14801, 1)
+	t = Thread(name='t1', target=server.RunUpdate)
+	t.start()
+	server.Recieve()
+	server.Close()
+	t.join()
