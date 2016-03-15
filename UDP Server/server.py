@@ -17,7 +17,7 @@ class Server:
 		self.sock.bind(("", port))
 	
 	def cls(self):
-		os.system('cls' if os.name=='nt' else 'clear')
+		system('cls' if os.name=='nt' else 'clear')
 	
 	def ShowUserList(self):
 		self.cls()
