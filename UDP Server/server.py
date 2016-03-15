@@ -1,5 +1,5 @@
 import socket
-from os import *
+import os
 import time
 from threading import *
 
@@ -16,8 +16,11 @@ class Server:
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		self.sock.bind(("", port))
 	
+	def cls(self):
+		os.system('cls' if os.name=='nt' else 'clear')
+	
 	def ShowUserList(self):
-		system('cls')
+		self.cls()
 		print('Server running...')
 		if len(self.userList) == 0:
 			print('No connections to server...')
