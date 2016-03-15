@@ -1,26 +1,43 @@
 import socket
+from os import *
 import time
+from threading import *
 
 
 class Server:
 	roomList = {}
 	roomID = 0
+	userList = {}
 	sock = None
 	last_time = 0
+	t = None
 	
 	def __init__(self, port):
 		print("Server running...")
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		self.sock.bind(("", port))
-
+	
+	def ShowUserList(self):
+		system('cls')
+		print('Server running...')
+		for	i in self.userList:
+			print('|\t' + i + '\t|\t' + self.userList[i][0] + '\t|\t' + str(round(self.userList[i][1])) + 'ms\t|')
+		time.sleep(0.1)
+	
+	def Run(self):
+		t = Thread(name='userList',target=self.ShowUserList)
+		t.start()
+		t.run()
+	
+	def Stop(self):
+		t.join()
+	
 	def Recieve(self):
 		while True:
 			data = self.sock.recvfrom(1024)
 			current_time = time.time()
-			ping = current_time - self.last_time
+			ping = (current_time - self.last_time) * 100
 			self.last_time = current_time
-			
-			# print("Ping: " + str(ping))
 			
 			msg = data[0].decode("utf-8")
 			addr = data[1]
@@ -29,7 +46,9 @@ class Server:
 				pass
 			else:
 				arr = msg.split(":")
-				if arr[0] == "nop":
+				if arr[0] == "0042nop":
+					self.userList[arr[1]] = [addr[0]+':'+str(addr[1]), ping]
+					self.ShowUserList()
 					continue
 				elif arr[0] == "createroom":
 					self.roomList[arr[1]]={'id':self.roomID,'host':addr[0],'port':int(addr[1])}
@@ -46,6 +65,10 @@ class Server:
 	def Close(self):
 		self.sock.close()
 
-server = Server(14801)
-server.Recieve()
-server.Close()
+try:
+	server = Server(14801)
+	server.Run()
+	server.Recieve()
+finally:
+	server.Close()
+	server.Stop()
