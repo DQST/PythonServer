@@ -13,6 +13,26 @@ class Server:
 		self.lastTime = 0
 		self.WORK = True
 
+		self.UserList = {}
+		self.ROOM_HASH = {}
+
+	def ParseData(self, inputData, ping):
+		data, addr = inputData
+		message = data.decode('utf-8')
+
+		ip_addr = str(addr[0]) + ':' + str(addr[1])
+
+		# command = message.split(':')
+		# if command[0] == '0042nop':
+		# 	self.UserList = [command[1], ip, ping]
+		# elif command[0] == '0042mkroom':
+		# 	self.ROOM_HASH[command[1]] = ip
+		# elif command[0] == '0042delroom':
+		# 	del self.ROOM_HASH[command[1]]
+		# elif command[0] == '0042conto':
+		# 	room_ip = self.ROOM_HASH[command[1]]
+		# 	self.SendTo('0042roomip:' + command[1] + ':' + room_ip, addr)
+
 	'''Send message here'''
 	def SendTo(self, msg, endPoint):
 		self.sock.sendto(bytes(msg, 'utf-8'), endPoint)
@@ -25,17 +45,21 @@ class Server:
 			PING = (curTime - self.lastTime) * 100
 			self.lastTime = curTime
 
-			data, addr = inputData
-			message = data.decode('utf-8')
-			
-			print('Addr: ' + str(addr) + ', message: ' + message)
-			self.SendTo("Hello!", addr)
+			'''Parse input data'''
+			self.ParseData(inputData)
 		else:
 			print('Recieve be stoped.')
 
 	'''At this must be show data about clients'''
 	def Update(self):
-		pass
+		for i in self.UserList:
+			ping = (time() - self.UserList[i][2]) * 100
+			if ping >= 100:
+				del self.UserList[i]
+
+		for i in self.UserList:
+			print('|\t' + i + '\t|\t' + self.UserList[i][1] +
+				'\t|\t' + self.UserList[i][2]+ '\t|')
 
 	'''Stop server here'''
 	def Stop(self):
