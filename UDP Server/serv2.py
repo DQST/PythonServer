@@ -32,11 +32,16 @@ class Server:
 
 		ip_addr = str(addr[0]) + ':' + str(addr[1])
 
-		command = message.split(':')
-		if command[0] == '0042nop':
-		 	self.UserList[command[1]] = UserData(ip_addr, ping, time)
-		else:
-			self.SendTo("Hello from Server!", addr)
+		arr = message.split(':')
+		protocol_ver = arr[0][:4]
+		command = arr[0][4:]
+
+		if protocol_ver == '0042':
+			if command == 'nop':
+				name = arr[1]
+				self.UserList[name] = UserData(ip_addr, ping, time)
+			else:
+				self.SendTo("Hello from Server!", addr)
 
 	'''Send message here'''
 	def SendTo(self, msg, endPoint):
@@ -102,10 +107,10 @@ if __name__ == '__main__':
 	updateT.start()
 	recieveT.start()
 	while True:
-		command = input('> ')
+		arr = input('> ')
 
 		'''Stop server'''
-		if command == 'exit':
+		if arr == 'exit':
 			server.Stop()
 			updateT.join()
 			recieveT.join()
