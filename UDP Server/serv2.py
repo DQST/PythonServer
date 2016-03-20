@@ -15,7 +15,30 @@ class UserData:
 		return '|\t{0}\t|\t{1}ms\t|'.format(self.IPAddr, round(self.Ping, 2))
 		
 
+class Rooms:
+	def __init__(self):
+		self.ROOM_HASH = {}
+		self.__ROOM_ID__ = 0
+
+	def Add(self, name, host):
+		self.ROOM_HASH[self.__ROOM_ID__] = [name, host]
+		self.__ROOM_ID__ += 1
+
+	def GetHostByName(self, name):
+		for i in self.ROOM_HASH:
+			if self.ROOM_HASH[i][0] == name:
+				return self.ROOM_HASH[i][1]
+		return None
+
+	def RemoveHost(self, name):
+		for i in self.ROOM_HASH:
+			if self.ROOM_HASH[i][0] == name:
+				del self.ROOM_HASH[i]
+				break
+
 class Server:
+	rooms = Rooms()
+
 	'''Server constructor'''
 	def __init__(self, args=()):
 		self.sock = socket(AF_INET, SOCK_DGRAM)
@@ -24,7 +47,6 @@ class Server:
 		self.WORK = True
 
 		self.UserList = {}
-		self.ROOM_HASH = {}
 
 	def ParseData(self, inputData, ping, time):
 		data, addr = inputData
@@ -40,7 +62,9 @@ class Server:
 			if command == 'nop':
 				name = arr[1]
 				self.UserList[name] = UserData(ip_addr, ping, time)
-			else:
+			elif command == 'newroom':
+				self.rooms.Add(arr[1], ip_addr)
+			elif command == 'test':
 				self.SendTo("Hello from Server!", addr)
 
 	'''Send message here'''
