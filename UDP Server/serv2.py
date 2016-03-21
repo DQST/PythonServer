@@ -21,8 +21,11 @@ class Rooms:
 		self.__ROOM_ID__ = 0
 
 	def Add(self, name, host):
-		self.ROOM_HASH[self.__ROOM_ID__] = [name, host]
-		self.__ROOM_ID__ += 1
+		if [name, host] in self.ROOM_HASH.values() == False or len(self.ROOM_HASH) <= 0:
+			self.ROOM_HASH[self.__ROOM_ID__] = [name, host]
+			self.__ROOM_ID__ += 1
+			return True
+		return False
 
 	def GetHostByName(self, name):
 		for i in self.ROOM_HASH:
@@ -63,9 +66,21 @@ class Server:
 				name = arr[1]
 				self.UserList[name] = UserData(ip_addr, ping, time)
 			elif command == 'newroom':
-				self.rooms.Add(arr[1], ip_addr)
-			elif command == 'test':
-				self.SendTo("Hello from Server!", addr)
+				res = self.rooms.Add(arr[1], ip_addr)
+				if res == False:
+					self.SendTo('Error, room "%s" already exist!' % arr[1], addr)
+				else:
+					self.SendTo('Room "%s" has been create!' % arr[1], addr)
+			elif command == 'contoroom':
+				res = self.rooms.GetHostByName(arr[1])
+				if res != None:
+					self.SendTo('tryconto:' + res, addr)
+					args = res.split(':')
+					self.SendTo('tryconto:' + addr[0]+':'+str(addr[1]), (args[0], int(args[1])))
+				else:
+					self.SendTo('Room %s not found!' % arr[1], addr)
+			elif command == 'msg':
+				self.SendTo('Hello from Server!', addr)
 
 	'''Send message here'''
 	def SendTo(self, msg, endPoint):
@@ -90,7 +105,6 @@ class Server:
 	def ShowUserList(self):
 		if len(self.UserList) <= 0:
 			print('*********** No connecting ***********')
-
 		for i in self.UserList:
 			print('|\t%s\t%s' % (i, self.UserList[i].ToString()))
 
@@ -99,14 +113,13 @@ class Server:
 		while  self.WORK:
 			print('Connecting to server:')
 			self.ShowUserList()
-			for i in self.UserList:
-				delta = (time() - self.UserList[i].Time) * 100
-				if delta >= 100:
-			 		del self.UserList[i]
-			 		if len(self.UserList) > 0:
-			 			continue
-			 		else:
-			 			break
+			try:
+				for i in self.UserList:
+					delta = (time() - self.UserList[i].Time) * 100
+					if delta >= 100:
+						self.UserList.pop(i, None)
+			except KeyError:
+				pass
 
 			sleep(1)
 			self.cls()
@@ -122,13 +135,13 @@ if __name__ == '__main__':
 	if len(argv) > 1:
 		argsList = (argv[1], argv[2])
 	else:
-		argsList = ('127.0.0.1',14801)
+		argsList = ('0.0.0.0',14801)
 	
 	server = Server(argsList)
 
-	updateT = Thread(name='update', target=server.Update)
+	# updateT = Thread(name='update', target=server.Update)
 	recieveT = Thread(name='recieve', target=server.Recieve)
-	updateT.start()
+	# updateT.start()
 	recieveT.start()
 	while True:
 		arr = input('> ')
@@ -136,6 +149,6 @@ if __name__ == '__main__':
 		'''Stop server'''
 		if arr == 'exit':
 			server.Stop()
-			updateT.join()
+			# updateT.join()
 			recieveT.join()
 			break
