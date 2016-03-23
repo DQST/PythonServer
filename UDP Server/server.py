@@ -49,8 +49,6 @@ class Server:
 		self.lastTime = 0
 		self.WORK = True
 
-		self.UserList = {}
-
 	def ParseData(self, inputData, ping, time):
 		data, addr = inputData
 		message = data.decode('utf-8')
@@ -63,8 +61,7 @@ class Server:
 
 		if protocol_ver == '0042':
 			if command == 'nop':
-				name = arr[1]
-				self.UserList[name] = UserData(ip_addr, ping, time)
+				pass
 			elif command == 'newroom':
 				res = self.rooms.Add(arr[1], ip_addr)
 				if res == False:
@@ -101,28 +98,6 @@ class Server:
 
 	def cls(self):
 		system('cls' if name == 'nt' else 'clear')
-
-	def ShowUserList(self):
-		if len(self.UserList) <= 0:
-			print('*********** No connecting ***********')
-		for i in self.UserList:
-			print('|\t%s\t%s' % (i, self.UserList[i].ToString()))
-
-	'''At this must be show data about clients'''
-	def Update(self):
-		while  self.WORK:
-			print('Connecting to server:')
-			self.ShowUserList()
-			try:
-				for i in self.UserList:
-					delta = (time() - self.UserList[i].Time) * 100
-					if delta >= 100:
-						self.UserList.pop(i, None)
-			except KeyError:
-				pass
-
-			sleep(1)
-			self.cls()
 
 	'''Stop server here'''
 	def Stop(self):
