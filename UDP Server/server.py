@@ -1,91 +1,154 @@
-import socket
-import os
-import time
-import sys
+from os import *
 from threading import *
+from time import *
+from socket import *
+from sys import argv
 
+class UserData:
+	"""docstring for User"""
+	def __init__(self, ip, ping, time):
+		self.IPAddr = ip
+		self.Ping = ping
+		self.Time = time
+
+	def ToString(self):
+		return '|\t{0}\t|\t{1}ms\t|'.format(self.IPAddr, round(self.Ping, 2))
+		
+
+class Rooms:
+	def __init__(self):
+		self.ROOM_HASH = {}
+		self.__ROOM_ID__ = 0
+
+	def Add(self, name, host):
+		if [name, host] in self.ROOM_HASH.values() == False or len(self.ROOM_HASH) <= 0:
+			self.ROOM_HASH[self.__ROOM_ID__] = [name, host]
+			self.__ROOM_ID__ += 1
+			return True
+		return False
+
+	def GetHostByName(self, name):
+		for i in self.ROOM_HASH:
+			if self.ROOM_HASH[i][0] == name:
+				return self.ROOM_HASH[i][1]
+		return None
+
+	def RemoveHost(self, name):
+		for i in self.ROOM_HASH:
+			if self.ROOM_HASH[i][0] == name:
+				del self.ROOM_HASH[i]
+				break
 
 class Server:
-	roomList = {}
-	roomID = 0
-	userList = {}
-	sock = None
-	last_time = 0
-	_update_time = 1
-	
-	def __init__(self, port, time):
-		print("Server running...")
-		self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-		self.sock.bind(("", port))
-		self._update_time = time
-	
-	def cls(self):
-		os.system('cls' if os.name=='nt' else 'clear')
-	
-	def ShowUserList(self):
-		self.cls()
-		print('Server running...')
-		if len(self.userList) == 0:
-			print('No connections to server...')
-		for	i in self.userList:
-			print('|\t' + i + '\t|\t' + self.userList[i][0] + '\t|\t' + str(round(self.userList[i][1])) + 'ms\t|')
-		time.sleep(self._update_time)
-	
-	def UpdateUserList(self):
-		for i in self.userList:
-			last_time = self.userList[i][2]
-			delta = (time.time() - last_time) * 100
-			if delta >= 100:
-				print(delta)
-				self.userList.pop(i)
-				if len(self.userList) > 0:
-					continue
+	rooms = Rooms()
+
+	'''Server constructor'''
+	def __init__(self, args=()):
+		self.sock = socket(AF_INET, SOCK_DGRAM)
+		self.sock.bind(args)
+		self.lastTime = 0
+		self.WORK = True
+
+		self.UserList = {}
+
+	def ParseData(self, inputData, ping, time):
+		data, addr = inputData
+		message = data.decode('utf-8')
+
+		ip_addr = str(addr[0]) + ':' + str(addr[1])
+
+		arr = message.split(':')
+		protocol_ver = arr[0][:4]
+		command = arr[0][4:]
+
+		if protocol_ver == '0042':
+			if command == 'nop':
+				name = arr[1]
+				self.UserList[name] = UserData(ip_addr, ping, time)
+			elif command == 'newroom':
+				res = self.rooms.Add(arr[1], ip_addr)
+				if res == False:
+					self.SendTo('Error, room "%s" already exist!' % arr[1], addr)
 				else:
-					break;
-	
-	def RunUpdate(self):
-		while True:
-			self.ShowUserList()
-			self.UpdateUserList()
-	
+					self.SendTo('Room "%s" has been create!' % arr[1], addr)
+			elif command == 'contoroom':
+				res = self.rooms.GetHostByName(arr[1])
+				if res != None:
+					self.SendTo('tryconto:' + res, addr)
+					args = res.split(':')
+					self.SendTo('tryconto:' + addr[0]+':'+str(addr[1]), (args[0], int(args[1])))
+				else:
+					self.SendTo('Room %s not found!' % arr[1], addr)
+			elif command == 'msg':
+				self.SendTo('Hello from Server!', addr)
+
+	'''Send message here'''
+	def SendTo(self, msg, endPoint):
+		self.sock.sendto(bytes(msg, 'utf-8'), endPoint)
+
+	'''Recieve input message'''
 	def Recieve(self):
-		while True:
-			data = self.sock.recvfrom(1024)
-			current_time = time.time()
-			ping = (current_time - self.last_time) * 100
-			self.last_time = current_time
-			
-			msg = data[0].decode("utf-8")
-			addr = data[1]
-			
-			if msg:
-				arr = msg.split(":")
-				if arr[0] == "0042nop":
-					self.userList[arr[1]] = [addr[0]+':'+str(addr[1]), ping, time.time()]
-					continue
-				elif arr[0] == "createroom":
-					self.roomList[arr[1]]={'id':self.roomID,'host':addr[0],'port':int(addr[1])}
-					self.roomID += 1;
-					self.Send(bytes("Add new room:" + arr[1], 'utf-8'), addr)
-					continue
-				
-				self.Send(b"Hello from UDP Python Server!", addr)
-	
-	def Send(self, msg, remoteAddr):
-		self.sock.sendto(msg, remoteAddr)
-	
-	def Close(self):
-		self.sock.close()
+		while self.WORK:
+			inputData = self.sock.recvfrom(1024)
+			curTime = time()
+			PING = (curTime - self.lastTime) * 100
+			self.lastTime = curTime
+
+			'''Parse input data'''
+			self.ParseData(inputData, PING, curTime)
+		else:
+			print('Recieve stoped.')
+
+	def cls(self):
+		system('cls' if name == 'nt' else 'clear')
+
+	def ShowUserList(self):
+		if len(self.UserList) <= 0:
+			print('*********** No connecting ***********')
+		for i in self.UserList:
+			print('|\t%s\t%s' % (i, self.UserList[i].ToString()))
+
+	'''At this must be show data about clients'''
+	def Update(self):
+		while  self.WORK:
+			print('Connecting to server:')
+			self.ShowUserList()
+			try:
+				for i in self.UserList:
+					delta = (time() - self.UserList[i].Time) * 100
+					if delta >= 100:
+						self.UserList.pop(i, None)
+			except KeyError:
+				pass
+
+			sleep(1)
+			self.cls()
+
+	'''Stop server here'''
+	def Stop(self):
+		self.WORK = False
+
 
 if __name__ == '__main__':
-	inputData = sys.argv
-	server = None
-	if len(inputData) > 1:
-		server = Server(int(inputData[1]), int(inputData[2]))
+	argsList = None
+
+	if len(argv) > 1:
+		argsList = (argv[1], argv[2])
 	else:
-		server = Server(14801, 1)
-	t = Thread(name='t1', target=server.RunUpdate)
-	t.start()
-	server.Recieve()
-	server.Close()
-	t.join()
+		argsList = ('0.0.0.0',14801)
+	
+	server = Server(argsList)
+
+	# updateT = Thread(name='update', target=server.Update)
+	recieveT = Thread(name='recieve', target=server.Recieve)
+	# updateT.start()
+	recieveT.start()
+	while True:
+		arr = input('> ')
+
+		'''Stop server'''
+		if arr == 'exit':
+			server.Stop()
+			# updateT.join()
+			recieveT.join()
+			break
