@@ -5,30 +5,6 @@ from socket import *
 from sys import argv
 
 
-class Rooms:
-	def __init__(self):
-		self.ROOM_HASH = {}
-		self.__ROOM_ID__ = 0
-
-	def Add(self, name, host):
-		if [name, host] in self.ROOM_HASH.values() == False or len(self.ROOM_HASH) <= 0:
-			self.ROOM_HASH[self.__ROOM_ID__] = [name, host]
-			self.__ROOM_ID__ += 1
-			return True
-		return False
-
-	def GetHostByName(self, name):
-		for i in self.ROOM_HASH:
-			if self.ROOM_HASH[i][0] == name:
-				return self.ROOM_HASH[i][1]
-		return None
-
-	def RemoveHost(self, name):
-		for i in self.ROOM_HASH:
-			if self.ROOM_HASH[i][0] == name:
-				del self.ROOM_HASH[i]
-				break
-
 class Server:
 	'''Server constructor'''
 	def __init__(self, args=()):
