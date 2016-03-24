@@ -118,10 +118,7 @@ if __name__ == '__main__':
 		argsList = ('0.0.0.0',14801)
 	
 	server = Server(argsList)
-
-	# updateT = Thread(name='update', target=server.Update)
 	recieveT = Thread(name='recieve', target=server.Recieve)
-	# updateT.start()
 	recieveT.start()
 	while True:
 		arr = input('> ')
@@ -129,6 +126,5 @@ if __name__ == '__main__':
 		'''Stop server'''
 		if arr == 'exit':
 			server.Stop()
-			# updateT.join()
 			recieveT.join()
 			break
