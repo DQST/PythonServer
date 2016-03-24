@@ -4,16 +4,6 @@ from time import *
 from socket import *
 from sys import argv
 
-class UserData:
-	"""docstring for User"""
-	def __init__(self, ip, ping, time):
-		self.IPAddr = ip
-		self.Ping = ping
-		self.Time = time
-
-	def ToString(self):
-		return '|\t{0}\t|\t{1}ms\t|'.format(self.IPAddr, round(self.Ping, 2))
-		
 
 class Rooms:
 	def __init__(self):
