@@ -1,4 +1,4 @@
-from os import system
+import os
 from threading import *
 from time import *
 from socket import *
@@ -99,7 +99,7 @@ class Server:
 			print('Recieve stoped.')
 
 	def cls(self):
-		system('cls' if name == 'nt' else 'clear')
+		os.system('cls' if os.name == 'nt' else 'clear')
 
 	'''Stop server here'''
 	def Stop(self):
