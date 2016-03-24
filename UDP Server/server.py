@@ -70,14 +70,16 @@ class Server:
 					self.SendTo('Room "%s" has been create!' % arr[1], addr)
 					self.Log('{2} | [{0}] Create room "{1}"'.format(ip_addr, arr[1], self.GetFormatTime()))
 			elif command == 'contoroom':
-				pass
-				# res = self.rooms.GetHostByName(arr[1])
-				# if res != None:
-				# 	self.SendTo('tryconto:' + res, addr)
-				# 	args = res.split(':')
-				# 	self.SendTo('tryconto:' + addr[0]+':'+str(addr[1]), (args[0], int(args[1])))
-				# else:
-				# 	self.SendTo('Room %s not found!' % arr[1], addr)
+				res = None
+				if arr[1] in self.__ROOM_HASH__.keys():
+					res = self.__ROOM_HASH__[arr[1]]
+				
+				if res != None:
+					newAdr = res[0] + ':' + str(res[1])
+					self.SendTo('tryconto:' + newAdr, addr)
+					self.SendTo('tryconto:' + addr[0]+':'+str(addr[1]), res)
+				else:
+					self.SendTo('Room "%s" not found!' % arr[1])
 			elif command == 'msg':
 				self.SendTo('Hello from Server!', addr)
 
