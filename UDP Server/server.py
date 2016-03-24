@@ -74,7 +74,7 @@ class Server:
 			'''Parse input data'''
 			self.ParseData(inputData, PING, curTime)
 		else:
-			print('Recieve stoped.')
+			self.Log('{0} | Recieve stoped.'.format(self.GetFormatTime()))
 
 	def cls(self):
 		os.system('cls' if os.name == 'nt' else 'clear')
