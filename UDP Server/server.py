@@ -1,4 +1,4 @@
-from os import *
+from os import system
 from threading import *
 from time import *
 from socket import *
@@ -30,14 +30,23 @@ class Rooms:
 				break
 
 class Server:
-	rooms = Rooms()
-
 	'''Server constructor'''
 	def __init__(self, args=()):
 		self.sock = socket(AF_INET, SOCK_DGRAM)
 		self.sock.bind(args)
 		self.lastTime = 0
 		self.WORK = True
+		self.__ROOM_HASH__ = {}
+		self.Log('%s | Server running...' % self.GetFormatTime())
+
+	def Log(self, msg, logFile='log.txt'):
+		f = open(logFile, 'a')
+		f.write(msg + '\n')
+		f.close()
+
+	def GetFormatTime(self):
+		ti = localtime()
+		return '{0}.{1}.{2} {3}:{4}:{5}'.format(ti[2], ti[1], ti[0], ti[3], ti[4], ti[5])
 
 	def ParseData(self, inputData, ping, time):
 		data, addr = inputData
@@ -53,19 +62,22 @@ class Server:
 			if command == 'nop':
 				pass
 			elif command == 'newroom':
-				res = self.rooms.Add(arr[1], ip_addr)
-				if res == False:
+				if arr[1] in self.__ROOM_HASH__.keys():
 					self.SendTo('Error, room "%s" already exist!' % arr[1], addr)
+					self.Log('{2} | [{0}] Error "{1}" already exist!'.format(ip_addr, arr[1], self.GetFormatTime()))
 				else:
+					self.__ROOM_HASH__[arr[1]] = addr
 					self.SendTo('Room "%s" has been create!' % arr[1], addr)
+					self.Log('{2} | [{0}] Create room "{1}"'.format(ip_addr, arr[1], self.GetFormatTime()))
 			elif command == 'contoroom':
-				res = self.rooms.GetHostByName(arr[1])
-				if res != None:
-					self.SendTo('tryconto:' + res, addr)
-					args = res.split(':')
-					self.SendTo('tryconto:' + addr[0]+':'+str(addr[1]), (args[0], int(args[1])))
-				else:
-					self.SendTo('Room %s not found!' % arr[1], addr)
+				pass
+				# res = self.rooms.GetHostByName(arr[1])
+				# if res != None:
+				# 	self.SendTo('tryconto:' + res, addr)
+				# 	args = res.split(':')
+				# 	self.SendTo('tryconto:' + addr[0]+':'+str(addr[1]), (args[0], int(args[1])))
+				# else:
+				# 	self.SendTo('Room %s not found!' % arr[1], addr)
 			elif command == 'msg':
 				self.SendTo('Hello from Server!', addr)
 
@@ -92,6 +104,9 @@ class Server:
 	'''Stop server here'''
 	def Stop(self):
 		self.WORK = False
+		self.Log('%s | Server stoped!' % self.GetFormatTime())
+		self.SendTo('Stop...', ('127.0.0.1', 148001))
+		self.sock.close()
 
 
 if __name__ == '__main__':
