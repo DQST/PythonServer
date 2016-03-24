@@ -105,7 +105,7 @@ class Server:
 	def Stop(self):
 		self.WORK = False
 		self.Log('%s | Server stoped!' % self.GetFormatTime())
-		self.SendTo('Stop...', ('127.0.0.1', 148001))
+		self.SendTo('Stop...', ('127.0.0.1', 14801))
 		self.sock.close()
 
 
