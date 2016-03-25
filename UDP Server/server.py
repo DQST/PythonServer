@@ -1,4 +1,5 @@
 import os
+import json
 from threading import *
 from time import *
 from socket import *
@@ -12,7 +13,10 @@ class Server:
 		self.sock.bind(args)
 		self.lastTime = 0
 		self.WORK = True
-		self.__ROOM_HASH__ = {}
+		if os.path.exists('table.json'):
+			self.__ROOM_HASH__ = self.DeserializeJSON()
+		else:
+			self.__ROOM_HASH__ = {}
 		self.Log('%s | Server running...' % self.GetFormatTime())
 
 	def Log(self, msg, logFile='log.txt'):
@@ -23,6 +27,18 @@ class Server:
 	def GetFormatTime(self):
 		ti = localtime()
 		return '{0}.{1}.{2} {3}:{4}:{5}'.format(ti[2], ti[1], ti[0], ti[3], ti[4], ti[5])
+
+	def SerializeJSON(self, obj, path="table.json"):
+		data = json.dumps(obj)
+		f = open(path, 'w')
+		f.write(data)
+		f.close()
+
+	def DeserializeJSON(self, path="table.json"):
+		f = open(path)
+		data = f.read()
+		f.close()
+		return json.loads(data)
 
 	def ParseData(self, inputData, ping, time):
 		data, addr = inputData
@@ -84,8 +100,11 @@ class Server:
 		self.WORK = False
 		self.Log('%s | Server stoped!' % self.GetFormatTime())
 		self.SendTo('Stop...', ('127.0.0.1', 14801))
+		self.SerializeJSON(self.__ROOM_HASH__)
 		self.sock.close()
 
+
+switch = {'rooms': lambda x: [print('"{0}" {1}'.format(i,x[i])) for i in x]}
 
 if __name__ == '__main__':
 	argsList = None
@@ -106,3 +125,8 @@ if __name__ == '__main__':
 			server.Stop()
 			recieveT.join()
 			break
+		else:
+			if arr in switch.keys():
+				switch[arr](server.__ROOM_HASH__)
+			else:
+				print('Command "%s" not found!' % arr)
