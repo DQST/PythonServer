@@ -21,7 +21,7 @@ class Server:
 
 	def Log(self, msg, logFile='log.txt'):
 		f = open(logFile, 'a')
-		f.write(msg + '\n')
+		f.write('{0} | {1}\n'.format(self.GetFormatTime(), msg))
 		f.close()
 
 	def GetFormatTime(self):
@@ -56,11 +56,11 @@ class Server:
 			elif command == 'newroom':
 				if arr[1] in self.__ROOM_HASH__.keys():
 					self.SendTo('Error, room "%s" already exist!' % arr[1], addr)
-					self.Log('{2} | [{0}] Error "{1}" already exist!'.format(ip_addr, arr[1], self.GetFormatTime()))
+					self.Log('[{0}] Error "{1}" already exist!'.format(ip_addr, arr[1]))
 				else:
 					self.__ROOM_HASH__[arr[1]] = addr
 					self.SendTo('Room "%s" has been create!' % arr[1], addr)
-					self.Log('{2} | [{0}] Create room "{1}"'.format(ip_addr, arr[1], self.GetFormatTime()))
+					self.Log('[{0}] Create room "{1}"'.format(ip_addr, arr[1]))
 			elif command == 'contoroom':
 				res = None
 				if arr[1] in self.__ROOM_HASH__.keys():
@@ -90,7 +90,7 @@ class Server:
 			'''Parse input data'''
 			self.ParseData(inputData, PING, curTime)
 		else:
-			self.Log('{0} | Recieve stoped.'.format(self.GetFormatTime()))
+			self.Log('Recieve stoped.')
 
 	def cls(self):
 		os.system('cls' if os.name == 'nt' else 'clear')
@@ -98,7 +98,7 @@ class Server:
 	'''Stop server here'''
 	def Stop(self):
 		self.WORK = False
-		self.Log('%s | Server stoped!' % self.GetFormatTime())
+		self.Log('Server stoped!')
 		self.SendTo('Stop...', ('127.0.0.1', 14801))
 		self.SerializeJSON(self.__ROOM_HASH__)
 		self.sock.close()
@@ -117,6 +117,7 @@ if __name__ == '__main__':
 	server = Server(argsList)
 	recieveT = Thread(name='recieve', target=server.Recieve)
 	recieveT.start()
+
 	while True:
 		arr = input('> ')
 
