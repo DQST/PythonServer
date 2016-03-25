@@ -29,7 +29,7 @@ class Server:
 		return '{0}.{1}.{2} {3}:{4}:{5}'.format(ti[2], ti[1], ti[0], ti[3], ti[4], ti[5])
 
 	def SerializeJSON(self, obj, path="table.json"):
-		data = json.dumps(obj)
+		data = json.dumps(obj, sort_keys=True, indent=4, separators=(',',': '))
 		f = open(path, 'w')
 		f.write(data)
 		f.close()
