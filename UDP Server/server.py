@@ -118,16 +118,20 @@ if __name__ == '__main__':
 	recieveT = Thread(name='recieve', target=server.Recieve)
 	recieveT.start()
 
-	while True:
-		arr = input('> ')
+	try:
+		while True:
+			arr = input('> ')
 
-		'''Stop server'''
-		if arr == 'exit':
-			server.Stop()
-			recieveT.join()
-			break
-		else:
-			if arr in switch.keys():
-				switch[arr](server.__ROOM_HASH__)
+			'''Stop server'''
+			if arr == 'exit':
+				server.Stop()
+				recieveT.join()
+				break
 			else:
-				print('Command "%s" not found!' % arr)
+				if arr in switch.keys():
+					switch[arr](server.__ROOM_HASH__)
+				else:
+					print('Command "%s" not found!' % arr)
+	except Exception as e:
+		server.Log('Server Error!')
+		server.Log('Error type: "%s"' % type(e))
