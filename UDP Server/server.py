@@ -70,6 +70,7 @@ class Server:
 					newAdr = res[0] + ':' + str(res[1])
 					self.SendTo('tryconto:' + newAdr, addr)
 					self.SendTo('tryconto:' + addr[0]+':'+str(addr[1]), res)
+					self.Log('[{0}] connect to [{1}]'.format(addr, res))
 				else:
 					self.SendTo('Room "%s" not found!' % arr[1])
 			elif command == 'msg':
