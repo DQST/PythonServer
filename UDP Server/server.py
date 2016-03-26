@@ -6,6 +6,18 @@ from socket import *
 from sys import argv
 
 
+class Help:
+	@staticmethod
+	def Log(msg, file='log.txt'):
+		f = open(file, 'a')
+		f.write('{0} | {1}\n'.format(Help.GetFormatTime(), msg))
+		f.close()
+
+	@staticmethod
+	def GetFormatTime():
+		ti = localtime()
+		return '{0}.{1}.{2} {3}:{4}:{5}'.format(ti[2], ti[1], ti[0], ti[3], ti[4], ti[5])
+
 class Server:
 	'''Server constructor'''
 	def __init__(self, args=()):
@@ -17,16 +29,7 @@ class Server:
 			self.__ROOM_HASH__ = self.DeserializeJSON()
 		else:
 			self.__ROOM_HASH__ = {}
-		self.Log('Server running...')
-
-	def Log(self, msg, logFile='log.txt'):
-		f = open(logFile, 'a')
-		f.write('{0} | {1}\n'.format(self.GetFormatTime(), msg))
-		f.close()
-
-	def GetFormatTime(self):
-		ti = localtime()
-		return '{0}.{1}.{2} {3}:{4}:{5}'.format(ti[2], ti[1], ti[0], ti[3], ti[4], ti[5])
+		Help.Log('Server running...')
 
 	def SerializeJSON(self, obj, path="table.json"):
 		data = json.dumps(obj, sort_keys=True, indent=4, separators=(',',': '))
@@ -56,11 +59,11 @@ class Server:
 			elif command == 'newroom':
 				if arr[1] in self.__ROOM_HASH__.keys():
 					self.SendTo('Error, room "%s" already exist!' % arr[1], addr)
-					self.Log('[{0}] Error "{1}" already exist!'.format(ip_addr, arr[1]))
+					Help.Log('[{0}] Error "{1}" already exist!'.format(ip_addr, arr[1]))
 				else:
 					self.__ROOM_HASH__[arr[1]] = addr
 					self.SendTo('Room "%s" has been create!' % arr[1], addr)
-					self.Log('[{0}] Create room "{1}"'.format(ip_addr, arr[1]))
+					Help.Log('[{0}] Create room "{1}"'.format(ip_addr, arr[1]))
 			elif command == 'contoroom':
 				res = None
 				if arr[1] in self.__ROOM_HASH__.keys():
@@ -70,7 +73,7 @@ class Server:
 					newAdr = res[0] + ':' + str(res[1])
 					self.SendTo('tryconto:' + newAdr, addr)
 					self.SendTo('tryconto:' + addr[0]+':'+str(addr[1]), res)
-					self.Log('[{0}] connect to [{1}]'.format(addr, res))
+					Help.Log('[{0}] connect to [{1}]'.format(addr, res))
 				else:
 					self.SendTo('Room "%s" not found!' % arr[1])
 			elif command == 'msg':
@@ -91,7 +94,7 @@ class Server:
 			'''Parse input data'''
 			self.ParseData(inputData, PING, curTime)
 		else:
-			self.Log('Recieve stoped.')
+			Help.Log('Recieve stoped.')
 
 	def cls(self):
 		os.system('cls' if os.name == 'nt' else 'clear')
@@ -99,7 +102,7 @@ class Server:
 	'''Stop server here'''
 	def Stop(self):
 		self.WORK = False
-		self.Log('Server stoped!')
+		Help.Log('Server stoped!')
 		self.SendTo('Stop...', ('127.0.0.1', 14801))
 		self.SerializeJSON(self.__ROOM_HASH__)
 		self.sock.close()
@@ -129,10 +132,10 @@ if __name__ == '__main__':
 				recieveT.join()
 				break
 			else:
-				if arr in switch.keys():
+				if (arr in switch.keys()) == True:
 					switch[arr](server.__ROOM_HASH__)
 				else:
 					print('Command "%s" not found!' % arr)
 	except Exception as e:
-		server.Log('Server Error!')
-		server.Log('Error type: "%s"' % type(e))
+		Help.Log('Server Error!')
+		Help.Log('Error type: "%s"' % type(e))
