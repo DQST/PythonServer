@@ -17,7 +17,7 @@ class Server:
 			self.__ROOM_HASH__ = self.DeserializeJSON()
 		else:
 			self.__ROOM_HASH__ = {}
-		self.Log('%s | Server running...' % self.GetFormatTime())
+		self.Log('Server running...')
 
 	def Log(self, msg, logFile='log.txt'):
 		f = open(logFile, 'a')
