@@ -5,7 +5,7 @@ from time import *
 from socket import *
 from sys import argv
 
-
+'''Help class'''
 class Help:
 	@staticmethod
 	def Log(msg, file='log.txt'):
@@ -18,6 +18,23 @@ class Help:
 		ti = localtime()
 		return '{0}.{1}.{2} {3}:{4}:{5}'.format(ti[2], ti[1], ti[0], ti[3], ti[4], ti[5])
 
+'''Config class.'''
+class Config:
+	@staticmethod
+	def Save(obj, path):
+		data = json.dumps(obj, sort_keys=True, indent=4, separators=(',',': '))
+		f = open(path, 'w')
+		f.write(data)
+		f.close()
+
+	@staticmethod
+	def Load(path):
+		f = open(path)
+		data = f.read()
+		f.close()
+		return json.loads(data)
+
+'''Server class'''
 class Server:
 	'''Server constructor'''
 	def __init__(self, args=()):
@@ -25,23 +42,14 @@ class Server:
 		self.sock.bind(args)
 		self.lastTime = 0
 		self.WORK = True
+		self.UsersOnline = []
+
 		if os.path.exists('table.json'):
-			self.__ROOM_HASH__ = self.DeserializeJSON()
+			self.__ROOM_HASH__ = Config.Load('table.json')
 		else:
 			self.__ROOM_HASH__ = {}
+		
 		Help.Log('Server running...')
-
-	def SerializeJSON(self, obj, path="table.json"):
-		data = json.dumps(obj, sort_keys=True, indent=4, separators=(',',': '))
-		f = open(path, 'w')
-		f.write(data)
-		f.close()
-
-	def DeserializeJSON(self, path="table.json"):
-		f = open(path)
-		data = f.read()
-		f.close()
-		return json.loads(data)
 
 	def ParseData(self, inputData, ping, time):
 		data, addr = inputData
@@ -72,7 +80,7 @@ class Server:
 				if res != None:
 					newAdr = res[0] + ':' + str(res[1])
 					self.SendTo('tryconto:' + newAdr, addr)
-					self.SendTo('tryconto:' + addr[0]+':'+str(addr[1]), res)
+					self.SendTo('tryconto:' + addr[0]+':'+str(addr[1]), (res[0], res[1]))
 					Help.Log('[{0}] connect to [{1}]'.format(addr, res))
 				else:
 					self.SendTo('Room "%s" not found!' % arr[1])
@@ -104,9 +112,8 @@ class Server:
 		self.WORK = False
 		Help.Log('Server stoped!')
 		self.SendTo('Stop...', ('127.0.0.1', 14801))
-		self.SerializeJSON(self.__ROOM_HASH__)
+		Config.Save(self.__ROOM_HASH__, 'table.json')
 		self.sock.close()
-
 
 switch = {'rooms': lambda x: [print('"{0}" {1}'.format(i,x[i])) for i in x]}
 
