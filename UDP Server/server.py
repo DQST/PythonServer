@@ -85,6 +85,7 @@ class Server:
 
 				if res == addr:
 					self.SendTo('You already connect to room: "%s"' % arr[1], addr)
+					Help.Log('Try connect [%s] with himself.' % ip_addr)
 					return
 
 				if res != None:
