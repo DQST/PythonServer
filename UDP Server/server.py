@@ -82,7 +82,11 @@ class Server:
 				res = None
 				if arr[1] in self.__ROOM_HASH__.keys():
 					res = self.__ROOM_HASH__[arr[1]]
-				
+
+				if res == addr:
+					self.SendTo('You already connect to room: "%s"' % arr[1], addr)
+					return
+
 				if res != None:
 					newAdr = res[0] + ':' + str(res[1])
 					self.SendTo('tryconto:' + newAdr, addr)
