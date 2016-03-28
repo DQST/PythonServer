@@ -46,6 +46,12 @@ class Server:
 
 		if os.path.exists('table.json'):
 			self.__ROOM_HASH__ = Config.Load('table.json')
+
+			'''Convert list to tuple'''
+			for i in self.__ROOM_HASH__:
+				IP_ADR = self.__ROOM_HASH__[i][0]
+				PORT = self.__ROOM_HASH__[i][1]
+				self.__ROOM_HASH__[i] = (IP_ADR, PORT)
 		else:
 			self.__ROOM_HASH__ = {}
 		
@@ -80,7 +86,7 @@ class Server:
 				if res != None:
 					newAdr = res[0] + ':' + str(res[1])
 					self.SendTo('tryconto:' + newAdr, addr)
-					self.SendTo('tryconto:' + addr[0]+':'+str(addr[1]), (res[0], res[1]))
+					self.SendTo('tryconto:' + addr[0]+':'+str(addr[1]), res)
 					Help.Log('[{0}] connect to [{1}]'.format(addr, res))
 				else:
 					self.SendTo('Room "%s" not found!' % arr[1])
