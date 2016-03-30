@@ -95,6 +95,9 @@ class Server:
 					Help.Log('[{0}] connect to [{1}]'.format(addr, res))
 				else:
 					self.SendTo('Room "%s" not found!' % arr[1])
+			elif command == 'get_rooms':
+				jsonStr = json.dumps(self.__ROOM_HASH__)
+				self.SendTo('rooms_list$%s' % jsonStr, addr)
 			elif command == 'msg':
 				self.SendTo('Hello from Server!', addr)
 
@@ -116,9 +119,11 @@ class Server:
 			else:
 				Help.Log('Recieve stoped.')
 		except Exception as e:
+			Help.Log('---------------------')
 			Help.Log('Server Error!')
 			Help.Log('Error type: "%s"' % type(e))
 			Help.Log('Error args: "%s"' % str(e.args))
+			Help.Log('Error args: "%s"' % str(e))
 			Help.Log('---------------------')
 
 	def cls(self):
