@@ -118,7 +118,7 @@ class Server:
 		except Exception as e:
 			Help.Log('Server Error!')
 			Help.Log('Error type: "%s"' % type(e))
-			Help.Log('Error args: "%s"' % e.args)
+			Help.Log('Error args: "%s"' % str(e.args)).
 
 	def cls(self):
 		os.system('cls' if os.name == 'nt' else 'clear')
