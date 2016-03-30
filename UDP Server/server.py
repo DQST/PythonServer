@@ -104,16 +104,21 @@ class Server:
 
 	'''Recieve input message'''
 	def Recieve(self):
-		while self.WORK:
-			inputData = self.sock.recvfrom(1024)
-			curTime = time()
-			PING = (curTime - self.lastTime) * 100
-			self.lastTime = curTime
+		try:	
+			while self.WORK:
+				inputData = self.sock.recvfrom(1024)
+				curTime = time()
+				PING = (curTime - self.lastTime) * 100
+				self.lastTime = curTime
 
-			'''Parse input data'''
-			self.ParseData(inputData, PING, curTime)
-		else:
-			Help.Log('Recieve stoped.')
+				'''Parse input data'''
+				self.ParseData(inputData, PING, curTime)
+			else:
+				Help.Log('Recieve stoped.')
+		except Exception as e:
+			Help.Log('Server Error!')
+			Help.Log('Error type: "%s"' % type(e))
+			Help.Log('Error args: "%s"' % e.args)
 
 	def cls(self):
 		os.system('cls' if os.name == 'nt' else 'clear')
