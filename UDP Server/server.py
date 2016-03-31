@@ -88,10 +88,12 @@ class Server:
 					Help.Log('Try connect [%s] with himself.' % ip_addr)
 					return
 
+				'''Do something with this shit!!!!'''
 				if res != None:
-					newAdr = res[0] + ':' + str(res[1])
-					self.SendTo('tryconto:' + newAdr, addr)
-					self.SendTo('tryconto:' + addr[0]+':'+str(addr[1]), res)
+					user1 = res[0] + ':' + str(res[1])
+					user2 = addr[0]+':'+str(addr[1])
+					self.SendTo('tryconto$' + user1 + '$' + arr[1], addr)
+					self.SendTo('tryconto$' + user2 + '$' + arr[1], res)
 					Help.Log('[{0}] connect to [{1}]'.format(addr, res))
 				else:
 					self.SendTo('Room "%s" not found!' % arr[1])
