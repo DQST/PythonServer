@@ -135,12 +135,12 @@ class Server:
                 self.parse_data(input_data, ping, cur_time)
             else:
                 Help.log('receive stopped.')
-        except Exception as e:
+        except Exception as error:
             Help.log('---------------------')
             Help.log('Server Error!')
-            Help.log('Error type: "%s"' % type(e))
-            Help.log('Error args: "%s"' % str(e.args))
-            Help.log('Error args: "%s"' % str(e))
+            Help.log('Error type: "%s"' % type(error))
+            Help.log('Error args: "%s"' % str(error.args))
+            Help.log('Error args: "%s"' % str(error))
             Help.log('---------------------')
 
     '''stop server here'''
