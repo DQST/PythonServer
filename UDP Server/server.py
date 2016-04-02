@@ -8,27 +8,27 @@ from sys import argv
 '''Help class'''
 class Help:
 	@staticmethod
-	def Log(msg, file='log.txt'):
+	def log(msg, file='log.txt'):
 		f = open(file, 'a')
-		f.write('{0} | {1}\n'.format(Help.GetFormatTime(), msg))
+		f.write('{0} | {1}\n'.format(Help.ge_format_time(), msg))
 		f.close()
 
 	@staticmethod
-	def GetFormatTime():
+	def ge_format_time():
 		ti = localtime()
 		return '{0}.{1}.{2} {3}:{4}:{5}'.format(ti[2], ti[1], ti[0], ti[3], ti[4], ti[5])
 
 '''Config class.'''
 class Config:
 	@staticmethod
-	def Save(obj, path):
+	def save(obj, path):
 		data = json.dumps(obj, sort_keys=True, indent=4, separators=(',',': '))
 		f = open(path, 'w')
 		f.write(data)
 		f.close()
 
 	@staticmethod
-	def Load(path):
+	def load(path):
 		f = open(path)
 		data = f.read()
 		f.close()
@@ -45,19 +45,19 @@ class Server:
 		self.UsersOnline = []
 
 		if os.path.exists('table.json'):
-			self.__ROOM_HASH__ = Config.Load('table.json')
+			self.__ROOM_HASH__ = Config.load('table.json')
 
 			'''Convert list to tuple'''
 			for i in self.__ROOM_HASH__:
-				IP_ADR = self.__ROOM_HASH__[i][0]
-				PORT = self.__ROOM_HASH__[i][1]
-				self.__ROOM_HASH__[i] = (IP_ADR, PORT)
+				ip_adr = self.__ROOM_HASH__[i][0]
+				port = self.__ROOM_HASH__[i][1]
+				self.__ROOM_HASH__[i] = (ip_adr, port)
 		else:
 			self.__ROOM_HASH__ = {}
 		
-		Help.Log('Server running...')
+		Help.log('Server running...')
 
-	def ParseData(self, inputData, ping, time):
+	def parse_data(self, inputData, ping, time):
 		data, addr = inputData
 		message = data.decode('utf-8')
 
@@ -71,45 +71,45 @@ class Server:
 			if command == 'nop':
 				pass
 			elif command == 'newroom':
-				if (arr[1] in self.__ROOM_HASH__.keys()) == True:
-					self.SendTo('Error, room "%s" already exist!' % arr[1], addr)
-					Help.Log('[{0}] Error "{1}" already exist!'.format(ip_addr, arr[1]))
+				if (arr[1] in self.__ROOM_HASH__.keys()) is True:
+					self.send_to('Error, room "%s" already exist!' % arr[1], addr)
+					Help.log('[{0}] Error "{1}" already exist!'.format(ip_addr, arr[1]))
 				else:
 					self.__ROOM_HASH__[arr[1]] = addr
-					self.SendTo('Room "%s" has been create!' % arr[1], addr)
-					Help.Log('[{0}] Create room "{1}"'.format(ip_addr, arr[1]))
+					self.send_to('Room "%s" has been create!' % arr[1], addr)
+					Help.log('[{0}] Create room "{1}"'.format(ip_addr, arr[1]))
 			elif command == 'contoroom':
 				res = None
 				if arr[1] in self.__ROOM_HASH__.keys():
 					res = self.__ROOM_HASH__[arr[1]]
 
 				if res == addr:
-					self.SendTo('You already connect to room: "%s"' % arr[1], addr)
-					Help.Log('Try connect [%s] with himself.' % ip_addr)
+					self.send_to('You already connect to room: "%s"' % arr[1], addr)
+					Help.log('Try connect [%s] with himself.' % ip_addr)
 					return
 
 				'''Do something with this shit!!!!'''
-				if res != None:
+				if res is not None:
 					user1 = res[0] + ':' + str(res[1])
 					user2 = addr[0]+':'+str(addr[1])
-					self.SendTo('tryconto$' + user1 + '$' + arr[1], addr)
-					self.SendTo('tryconto$' + user2 + '$' + arr[1], res)
-					Help.Log('[{0}] connect to [{1}]'.format(addr, res))
+					self.send_to('tryconto$' + user1 + '$' + arr[1], addr)
+					self.send_to('tryconto$' + user2 + '$' + arr[1], res)
+					Help.log('[{0}] connect to [{1}]'.format(addr, res))
 				else:
-					self.SendTo('Room "%s" not found!' % arr[1])
+					self.send_to('Room "%s" not found!' % arr[1])
 			elif command == 'get_rooms':
-				jsonStr = json.dumps(self.__ROOM_HASH__)
-				self.SendTo('rooms_list$%s' % jsonStr, addr)
+				json_str = json.dumps(self.__ROOM_HASH__)
+				self.send_to('rooms_list$%s' % json_str, addr)
 			elif command == 'msg':
-				self.SendTo('Hello from Server!', addr)
+				self.send_to('Hello from Server!', addr)
 
 	'''Send message here'''
-	def SendTo(self, msg, endPoint):
+	def send_to(self, msg, endPoint):
 		self.sock.sendto(bytes(msg, 'utf-8'), endPoint)
 
-	'''Recieve input message'''
-	def Recieve(self):
-		try:	
+	'''receive input message'''
+	def receive(self):
+		try:
 			while self.WORK:
 				inputData = self.sock.recvfrom(1024)
 				curTime = time()
@@ -117,29 +117,29 @@ class Server:
 				self.lastTime = curTime
 
 				'''Parse input data'''
-				self.ParseData(inputData, PING, curTime)
+				self.parse_data(inputData, PING, curTime)
 			else:
-				Help.Log('Recieve stoped.')
+				Help.log('receive stopped.')
 		except Exception as e:
-			Help.Log('---------------------')
-			Help.Log('Server Error!')
-			Help.Log('Error type: "%s"' % type(e))
-			Help.Log('Error args: "%s"' % str(e.args))
-			Help.Log('Error args: "%s"' % str(e))
-			Help.Log('---------------------')
+			Help.log('---------------------')
+			Help.log('Server Error!')
+			Help.log('Error type: "%s"' % type(e))
+			Help.log('Error args: "%s"' % str(e.args))
+			Help.log('Error args: "%s"' % str(e))
+			Help.log('---------------------')
 
 	def cls(self):
 		os.system('cls' if os.name == 'nt' else 'clear')
 
-	'''Stop server here'''
-	def Stop(self):
+	'''stop server here'''
+	def stop(self):
 		self.WORK = False
-		Help.Log('Server stoped!')
-		self.SendTo('Stop...', ('127.0.0.1', 14801))
-		Config.Save(self.__ROOM_HASH__, 'table.json')
+		Help.log('Server stopped!')
+		self.send_to('Stop...', ('127.0.0.1', 14801))
+		Config.save(self.__ROOM_HASH__, 'table.json')
 		self.sock.close()
 
-switch = {'rooms': lambda x: [print('"{0}" {1}'.format(i,x[i])) for i in x]}
+switch = {'rooms': lambda x: [print('"{0}" {1}'.format(i, x[i])) for i in x]}
 
 if __name__ == '__main__':
 	argsList = None
@@ -147,26 +147,26 @@ if __name__ == '__main__':
 	if len(argv) > 1:
 		argsList = (argv[1], argv[2])
 	else:
-		argsList = ('0.0.0.0',14801)
-	
+		argsList = ('0.0.0.0', 14801)
+
 	server = Server(argsList)
-	receiveThread = Thread(name='receive', target=server.Recieve)
+	receiveThread = Thread(name='receive', target=server.receive)
 	receiveThread.start()
 
 	try:
 		while True:
 			arr = input('> ')
 
-			'''Stop server'''
+			'''stop server'''
 			if arr == 'exit':
-				server.Stop()
+				server.stop()
 				receiveThread.join()
 				break
 			else:
-				if arr in switch.keys():
+				if (arr in switch.keys()) is True:
 					switch[arr](server.__ROOM_HASH__)
 				else:
 					print('Command "%s" not found!' % arr)
 	except Exception as e:
-		Help.Log('Server Error!')
-		Help.Log('Error type: "%s"' % type(e))
+		Help.log('Server Error!')
+		Help.log('Error type: "%s"' % type(e))
