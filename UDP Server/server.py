@@ -2,7 +2,7 @@ import os
 import json
 from threading import *
 from time import *
-from socket import *
+import socket
 from sys import argv
 
 '''Help class'''
@@ -51,7 +51,7 @@ class Server:
     """Server constructor"""
 
     def __init__(self, args=()):
-        self.sock = socket(AF_INET, SOCK_DGRAM)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(args)
         self.lastTime = 0
         self.WORK = True
