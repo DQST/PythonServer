@@ -53,7 +53,6 @@ class Server:
     def __init__(self, args=()):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(args)
-        self.lastTime = 0
         self.WORK = True
         self.UsersOnline = []
 
@@ -70,7 +69,7 @@ class Server:
 
         Help.log('Server running...')
 
-    def parse_data(self, input_data, ping, time):
+    def parse_data(self, input_data):
         data, input_adr = input_data
         message = data.decode('utf-8')
 
@@ -127,12 +126,9 @@ class Server:
         try:
             while self.WORK:
                 input_data = self.sock.recvfrom(1024)
-                cur_time = time()
-                ping = (cur_time - self.lastTime) * 100
-                self.lastTime = cur_time
 
                 '''Parse input data'''
-                self.parse_data(input_data, ping, cur_time)
+                self.parse_data(input_data)
             else:
                 Help.log('receive stopped.')
         except Exception as error:
