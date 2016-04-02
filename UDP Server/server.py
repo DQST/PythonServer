@@ -109,7 +109,7 @@ class Server:
                     self.send_to('tryconto$' + user2 + '$' + strings[1], res)
                     Help.log('[{0}] connect to [{1}]'.format(input_adr, res))
                 else:
-                    self.send_to('Room "%s" not found!' % strings[1])
+                    self.send_to('Room "%s" not found!' % strings[1], input_adr)
             elif command == 'get_rooms':
                 json_str = json.dumps(self.__ROOM_HASH__)
                 self.send_to('rooms_list$%s' % json_str, input_adr)
