@@ -71,7 +71,7 @@ class Server:
 			if command == 'nop':
 				pass
 			elif command == 'newroom':
-				if arr[1] in self.__ROOM_HASH__.keys():
+				if (arr[1] in self.__ROOM_HASH__.keys()) == True:
 					self.SendTo('Error, room "%s" already exist!' % arr[1], addr)
 					Help.Log('[{0}] Error "{1}" already exist!'.format(ip_addr, arr[1]))
 				else:
@@ -150,8 +150,8 @@ if __name__ == '__main__':
 		argsList = ('0.0.0.0',14801)
 	
 	server = Server(argsList)
-	recieveT = Thread(name='recieve', target=server.Recieve)
-	recieveT.start()
+	receiveThread = Thread(name='receive', target=server.Recieve)
+	receiveThread.start()
 
 	try:
 		while True:
@@ -160,10 +160,10 @@ if __name__ == '__main__':
 			'''Stop server'''
 			if arr == 'exit':
 				server.Stop()
-				recieveT.join()
+				receiveThread.join()
 				break
 			else:
-				if (arr in switch.keys()) == True:
+				if arr in switch.keys():
 					switch[arr](server.__ROOM_HASH__)
 				else:
 					print('Command "%s" not found!' % arr)
