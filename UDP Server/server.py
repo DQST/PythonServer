@@ -123,21 +123,21 @@ class Server:
     '''receive input message'''
 
     def receive(self):
-        try:
-            while self.WORK:
+        while self.WORK:
+            try:
                 input_data = self.sock.recvfrom(1024)
 
                 '''Parse input data'''
                 self.parse_data(input_data)
-            else:
-                Help.log('receive stopped.')
-        except Exception as error:
-            Help.log('---------------------')
-            Help.log('Server Error!')
-            Help.log('Error type: "%s"' % type(error))
-            Help.log('Error args: "%s"' % str(error.args))
-            Help.log('Error args: "%s"' % str(error))
-            Help.log('---------------------')
+            except Exception as error:
+                Help.log('---------------------')
+                Help.log('Server Error!')
+                Help.log('Error type: "%s"' % type(error))
+                Help.log('Error args: "%s"' % str(error.args))
+                Help.log('Error args: "%s"' % str(error))
+                Help.log('---------------------')
+        else:
+            Help.log('receive stopped.')
 
     '''stop server here'''
 
