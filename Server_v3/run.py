@@ -2,12 +2,10 @@ import socket
 import threading
 import time
 import json
+import logging
 
 
-def log(msg, file='log.txt'):
-    f = open(file, 'a')
-    f.write(' | ' + msg + '\n')
-    f.close()
+logging.basicConfig(filename='log.txt', filemode='a', level=logging.DEBUG, format='%(asctime)s %(message)s')
 
 
 """DHT table to save data about rooms"""
@@ -84,20 +82,20 @@ class Server(threading.Thread):
     def run(self):
         while self.__FLAG_WORK__:
             try:
-                data, ip = self.sock.recvfrom(1024)                 # get receive data and input IP
-                decode_data = data.decode('utf-8')                  # decode from bytes to string
-                header = decode_data[:4]                            # get head of package
-                body = decode_data[4:]                              # get body of package
-                if header == '0042':                                # header = 0042
-                    self.parse(body, ip)                            # ok, parse body
+                data, ip = self.sock.recvfrom(1024)                     # get receive data and input IP
+                decode_data = data.decode('utf-8')                      # decode from bytes to string
+                header = decode_data[:4]                                # get head of package
+                body = decode_data[4:]                                  # get body of package
+                if header == '0042':                                    # header = 0042
+                    self.parse(body, ip)                                # ok, parse body
                 else:
-                    log('Unknown header: "%s"' % header)     # if no, then log
+                    logging.warning('Unknown header: "%s"' % header)    # if no, then logging.warning
             except Exception as error:
-                log('----------------------------------------')
-                log('Type: "%s"' % type(error))
-                log('Exception: "%s"' % str(error))
-                log('Exception args: "%s"' % str(error.args))
-                log('----------------------------------------')
+                logging.warning('----------------------------------------')
+                logging.warning('Type: "%s"' % type(error))
+                logging.warning('Exception: "%s"' % str(error))
+                logging.warning('Exception args: "%s"' % str(error.args))
+                logging.warning('----------------------------------------')
 
 
 if __name__ == '__main__':
