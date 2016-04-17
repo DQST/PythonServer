@@ -44,12 +44,9 @@ class Package(DHT):
 class Serialize:
     @staticmethod
     def save(file, obj):
-        if os.path.exists(file):
-            f = open(file, 'w')
-            f.write(obj)
-            f.close()
-        else:
-            raise FileNotFoundError('File "%s" not found!' % file)
+        f = open(file, 'w')
+        f.write(obj)
+        f.close()
 
     @staticmethod
     def load(file):
@@ -71,10 +68,17 @@ class Server(threading.Thread):
         self.__FLAG_WORK__ = True
         self.__HEADER__ = ver
         try:
-            self.__dht = Serialize.load('rooms.json')
+            pack = Package()
+            load = Serialize.load('rooms.json')
+            for i in load.keys():
+                pack.add(i, (load[i][0], load[i][1]))
+            self.__dht = pack
         except FileNotFoundError as error:
             self.__dht = DHT()
             logging.warning(error.args)
+
+    def __str__(self):
+        return self.__dht.__str__()
 
     def sendto(self, msg, end_point):
         data = bytes(self.__HEADER__ + msg, 'utf-8')
@@ -159,7 +163,7 @@ if __name__ == '__main__':
             server.stop_server()
             server.join()
             break
-        elif inp == 'list of room':
+        elif inp == 'rooms':
             print(server)
         else:
             print('Unknown command "%s"' % inp)
