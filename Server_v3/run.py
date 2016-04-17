@@ -4,9 +4,7 @@ import time
 import json
 import logging
 
-
 logging.basicConfig(filename='log.txt', filemode='a', level=logging.DEBUG, format='%(asctime)s %(message)s')
-
 
 """DHT table to save data about rooms"""
 
@@ -63,29 +61,33 @@ class Server(threading.Thread):
         self.sock.close()
 
     def parse(self, data, input_ip):
-        json_package = json.loads(data)             # convert input data from json to dict
+        json_package = json.loads(data)  # convert input data from json to dict
         for i in json_package.keys():
-            key = i                                 # get key
-            if key == 'msg':                        # if key in package = msg then send "Hello" message
+            key = i  # get key
+            if key == 'msg':  # if key in package = msg then send "Hello" message
                 pack = Package().add('msg', 'Hello from Server!').add('sender', 'Server').add('in_room', 'Server')
                 self.sendto(pack.get_json(), input_ip)
             elif key == 'add_room':
                 name = json_package[key]
                 if name not in self.__dht:
                     self.__dht.add(name, input_ip)
-                    pack = Package().add('msg', 'Room "%s" has been created!' % name).add('sender', 'Server').add('in_room', 'Server')
+                    pack = Package().add('msg', 'Room "%s" has been created!' % name).add('sender', 'Server').add(
+                        'in_room', 'Server')
                     self.sendto(pack.get_json(), input_ip)
                 else:
-                    pack = Package().add('msg', 'Room "%s" already exists!' % name).add('sender', 'Server').add('in_room', 'Server')
+                    pack = Package().add('msg', 'Room "%s" already exists!' % name).add('sender', 'Server').add(
+                        'in_room', 'Server')
                     self.sendto(pack.get_json(), input_ip)
             elif key == 'del_room':
                 name = json_package[key]
                 if name in self.__dht:
                     self.__dht.remove(name)
-                    pack = Package().add('msg', 'Delete room "%s".' % name).add('sender', 'Server').add('in_room', 'Server')
+                    pack = Package().add('msg', 'Delete room "%s".' % name).add('sender', 'Server').add('in_room',
+                                                                                                        'Server')
                     self.sendto(pack.get_json(), input_ip)
                 else:
-                    pack = Package().add('msg', 'Room "%s" not found!' % name).add('sender', 'Server').add('in_room', 'Server')
+                    pack = Package().add('msg', 'Room "%s" not found!' % name).add('sender', 'Server').add('in_room',
+                                                                                                           'Server')
                     self.sendto(pack.get_json(), input_ip)
             elif key == 'con_to':
                 name = json_package[key]
@@ -96,7 +98,8 @@ class Server(threading.Thread):
                     self.sendto(host.get_json(), input_ip)
                     self.sendto(user.get_json(), host_ip)
                 else:
-                    pack = Package().add('msg', 'Room "%s" not found!' % name).add('sender', 'Server').add('in_room', 'Server')
+                    pack = Package().add('msg', 'Room "%s" not found!' % name).add('sender', 'Server').add('in_room',
+                                                                                                           'Server')
                     self.sendto(pack.get_json(), input_ip)
             elif key == 'get_rooms':
                 pack = Package().add('rooms_list', self.__dht.get_json()).add('in_room', 'Server')
@@ -105,14 +108,14 @@ class Server(threading.Thread):
     def run(self):
         while self.__FLAG_WORK__:
             try:
-                data, ip = self.sock.recvfrom(1024)                     # get receive data and input IP
-                decode_data = data.decode('utf-8')                      # decode from bytes to string
-                header = decode_data[:4]                                # get head of package
-                body = decode_data[4:]                                  # get body of package
-                if header == '0042':                                    # header = 0042
-                    self.parse(body, ip)                                # ok, parse body
+                data, ip = self.sock.recvfrom(1024)  # get receive data and input IP
+                decode_data = data.decode('utf-8')  # decode from bytes to string
+                header = decode_data[:4]  # get head of package
+                body = decode_data[4:]  # get body of package
+                if header == '0042':  # header = 0042
+                    self.parse(body, ip)  # ok, parse body
                 else:
-                    logging.warning('Unknown header: "%s"' % header)    # if no, then logging.warning
+                    logging.warning('Unknown header: "%s"' % header)  # if no, then logging.warning
             except Exception as error:
                 logging.warning('----------------------------------------')
                 logging.warning('Type: "%s"' % type(error))
