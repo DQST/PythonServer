@@ -1,8 +1,7 @@
-import socket
-import threading
-import time
 import json
 import logging
+import socket
+import threading
 
 logging.basicConfig(filename='log.txt', filemode='a', level=logging.DEBUG, format='%(asctime)s %(message)s')
 
