@@ -2,6 +2,7 @@ import json
 import logging
 import socket
 import threading
+import os
 
 logging.basicConfig(filename='log.txt', filemode='a', level=logging.DEBUG, format='%(asctime)s %(message)s')
 
@@ -40,6 +41,27 @@ class Package(DHT):
         return self
 
 
+class Serialize:
+    @staticmethod
+    def save(file, obj):
+        if os.path.exists(file):
+            f = open(file, 'w')
+            f.write(obj)
+            f.close()
+        else:
+            raise FileNotFoundError('File "%s" not found!' % file)
+
+    @staticmethod
+    def load(file):
+        if os.path.exists(file):
+            f = open(file, 'r')
+            s = f.read()
+            f.close()
+            return json.loads(s)
+        else:
+            raise FileNotFoundError('File "%s" not found!' % file)
+
+
 class Server(threading.Thread):
     def __init__(self, ver='0042'):
         threading.Thread.__init__(self)
@@ -48,13 +70,18 @@ class Server(threading.Thread):
         self.sock.bind(('0.0.0.0', 14801))
         self.__FLAG_WORK__ = True
         self.__HEADER__ = ver
-        self.__dht = DHT()
+        try:
+            self.__dht = Serialize.load('rooms.json')
+        except FileNotFoundError as error:
+            self.__dht = DHT()
+            logging.warning(error.args)
 
     def sendto(self, msg, end_point):
         data = bytes(self.__HEADER__ + msg, 'utf-8')
         self.sock.sendto(data, end_point)
 
     def stop_server(self):
+        Serialize.save('rooms.json', self.__dht.get_json())
         self.__FLAG_WORK__ = False
         self.sendto('stop...', ('127.0.0.1', 14801))
         self.sock.close()
@@ -132,5 +159,7 @@ if __name__ == '__main__':
             server.stop_server()
             server.join()
             break
+        elif inp == 'list of room':
+            print(server)
         else:
             print('Unknown command "%s"' % inp)
