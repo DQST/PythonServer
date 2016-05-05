@@ -67,6 +67,7 @@ class Server(threading.Thread):
         self.sock.bind(('0.0.0.0', 14801))
         self.__FLAG_WORK__ = True
         self.__HEADER__ = ver
+        self.__METHODS__ = {'message': self.message, 'get_rooms': self.get_rooms}
         try:
             pack = Package()
             load = Serialize.load('rooms.json')
@@ -90,50 +91,74 @@ class Server(threading.Thread):
         self.sendto('stop...', ('127.0.0.1', 14801))
         self.sock.close()
 
+    def message(self, *args):
+        input_ip = args[0]
+        input_id = args[1]
+        pack = Package().add('jsonrpc', '2.0').add('method', 'pushMessage')\
+            .add('params', ['Server', 'Server', 'Hello from Server!']).add('id', input_id)
+        self.sendto(pack.get_json(), input_ip)
+
+    def get_rooms(self, *args):
+        input_ip = args[0]
+        input_id = args[1]
+        pack = Package().add('jsonrpc', '2.0').add('result', self.__dht.get_json()).add('id', input_id)
+        self.sendto(pack.get_json(), input_ip)
+
     def parse(self, data, input_ip):
-        json_package = json.loads(data)  # convert input data from json to dict
-        for i in json_package.keys():
-            key = i  # get key
-            if key == 'msg':  # if key in package = msg then send "Hello" message
-                pack = Package().add('msg', 'Hello from Server!').add('sender', 'Server').add('in_room', 'Server')
+        json_package = json.loads(data)
+        if 'jsonrpc' in json_package.keys() and json_package['jsonrpc'] == '2.0':
+            method = json_package['method']
+            input_id = json_package['id']
+            params = json_package['params']
+            if method in self.__METHODS__.keys():
+                self.__METHODS__[method](input_ip, input_id, params)
+            else:
+                pack = Package().add('jsonrpc', '2.0').\
+                    add('error', {'code': -32601, 'message': 'Procedure not found.'}).add('id', input_id)
                 self.sendto(pack.get_json(), input_ip)
-            elif key == 'add_room':
-                name = json_package[key]
-                if name not in self.__dht:
-                    self.__dht.add(name, input_ip)
-                    pack = Package().add('msg', 'Room "%s" has been created!' % name).add('sender', 'Server').add(
-                        'in_room', 'Server')
-                    self.sendto(pack.get_json(), input_ip)
-                else:
-                    pack = Package().add('msg', 'Room "%s" already exists!' % name).add('sender', 'Server').add(
-                        'in_room', 'Server')
-                    self.sendto(pack.get_json(), input_ip)
-            elif key == 'del_room':
-                name = json_package[key]
-                if name in self.__dht:
-                    self.__dht.remove(name)
-                    pack = Package().add('msg', 'Delete room "%s".' % name).add('sender', 'Server').add('in_room',
-                                                                                                        'Server')
-                    self.sendto(pack.get_json(), input_ip)
-                else:
-                    pack = Package().add('msg', 'Room "%s" not found!' % name).add('sender', 'Server').add('in_room',
-                                                                                                           'Server')
-                    self.sendto(pack.get_json(), input_ip)
-            elif key == 'con_to':
-                name = json_package[key]
-                if name in self.__dht:
-                    host_ip = self.__dht[name]
-                    host = Package().add('con_to', host_ip).add('in_room', 'Server')
-                    user = Package().add('con_to', input_ip).add('in_room', 'Server')
-                    self.sendto(host.get_json(), input_ip)
-                    self.sendto(user.get_json(), host_ip)
-                else:
-                    pack = Package().add('msg', 'Room "%s" not found!' % name).add('sender', 'Server').add('in_room',
-                                                                                                           'Server')
-                    self.sendto(pack.get_json(), input_ip)
-            elif key == 'get_rooms':
-                pack = Package().add('rooms_list', self.__dht.get_json()).add('in_room', 'Server')
-                self.sendto(pack.get_json(), input_ip)
+        # json_package = json.loads(data)  # convert input data from json to dict
+        # for i in json_package.keys():
+        #     key = i  # get key
+        #     if key == 'msg':  # if key in package = msg then send "Hello" message
+        #         pack = Package().add('msg', 'Hello from Server!').add('sender', 'Server').add('in_room', 'Server')
+        #         self.sendto(pack.get_json(), input_ip)
+        #     elif key == 'add_room':
+        #         name = json_package[key]
+        #         if name not in self.__dht:
+        #             self.__dht.add(name, input_ip)
+        #             pack = Package().add('msg', 'Room "%s" has been created!' % name).add('sender', 'Server').add(
+        #                 'in_room', 'Server')
+        #             self.sendto(pack.get_json(), input_ip)
+        #         else:
+        #             pack = Package().add('msg', 'Room "%s" already exists!' % name).add('sender', 'Server').add(
+        #                 'in_room', 'Server')
+        #             self.sendto(pack.get_json(), input_ip)
+        #     elif key == 'del_room':
+        #         name = json_package[key]
+        #         if name in self.__dht:
+        #             self.__dht.remove(name)
+        #             pack = Package().add('msg', 'Delete room "%s".' % name).add('sender', 'Server').add('in_room',
+        #                                                                                                 'Server')
+        #             self.sendto(pack.get_json(), input_ip)
+        #         else:
+        #             pack = Package().add('msg', 'Room "%s" not found!' % name).add('sender', 'Server').add('in_room',
+        #                                                                                                    'Server')
+        #             self.sendto(pack.get_json(), input_ip)
+        #     elif key == 'con_to':
+        #         name = json_package[key]
+        #         if name in self.__dht:
+        #             host_ip = self.__dht[name]
+        #             host = Package().add('con_to', host_ip).add('in_room', 'Server')
+        #             user = Package().add('con_to', input_ip).add('in_room', 'Server')
+        #             self.sendto(host.get_json(), input_ip)
+        #             self.sendto(user.get_json(), host_ip)
+        #         else:
+        #             pack = Package().add('msg', 'Room "%s" not found!' % name).add('sender', 'Server').add('in_room',
+        #                                                                                                    'Server')
+        #             self.sendto(pack.get_json(), input_ip)
+        #     elif key == 'get_rooms':
+        #         pack = Package().add('rooms_list', self.__dht.get_json()).add('in_room', 'Server')
+        #         self.sendto(pack.get_json(), input_ip)
 
     def run(self):
         while self.__FLAG_WORK__:
