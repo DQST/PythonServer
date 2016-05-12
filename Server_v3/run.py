@@ -6,6 +6,41 @@ import os
 
 logging.basicConfig(filename='log.txt', filemode='a', level=logging.DEBUG, format='%(asctime)s %(message)s')
 
+
+class JsonRpcService:
+    def __init__(self, o):
+        self.__methods__ = {}
+        elements = dir(o)
+        for i in elements:
+            ty = type(getattr(o, i))
+            try:
+                if (str(ty) == "<class 'method'>") and (getattr(o, i).wrapped is True):
+                    self.__methods__[getattr(o, i).__name__] = getattr(o, i)
+            except:
+                pass
+
+    def call(self, name, *args, **kargs):
+        if name in self.__methods__.keys():
+            self.__methods__[name](*args, **kargs)
+        else:
+            raise Exception('Method %s not found!' % name)
+
+    def add(self, name, method):
+        if name not in self.__methods__.keys():
+            self.__methods__[name] = method
+        else:
+            raise Exception('Method %s already exists!' % name)
+
+    def remove(self, name):
+        if name in self.__methods__.keys():
+            del self.__methods__[name]
+
+
+def json_rpc_method(fun):
+    fun.wrapped = True
+    return fun
+
+
 """DHT table to save data about rooms"""
 
 
@@ -67,7 +102,7 @@ class Server(threading.Thread):
         self.sock.bind(('0.0.0.0', 14801))
         self.__FLAG_WORK__ = True
         self.__HEADER__ = ver
-        self.__METHODS__ = {'message': self.message, 'get_rooms': self.get_rooms}
+        self.__service__ = JsonRpcService(self)
         try:
             pack = Package()
             load = Serialize.load('rooms.json')
@@ -91,6 +126,7 @@ class Server(threading.Thread):
         self.sendto('stop...', ('127.0.0.1', 14801))
         self.sock.close()
 
+    @json_rpc_method
     def message(self, *args):
         input_ip = args[0]
         input_id = args[1]
@@ -98,6 +134,7 @@ class Server(threading.Thread):
             .add('params', ['Server', 'Server', 'Hello from Server!']).add('id', input_id)
         self.sendto(pack.get_json(), input_ip)
 
+    @json_rpc_method
     def get_rooms(self, *args):
         input_ip = args[0]
         input_id = args[1]
@@ -110,9 +147,9 @@ class Server(threading.Thread):
             method = json_package['method']
             input_id = json_package['id']
             params = json_package['params']
-            if method in self.__METHODS__.keys():
-                self.__METHODS__[method](input_ip, input_id, params)
-            else:
+            try:
+                self.__service__.call(method, input_ip, input_id, params)
+            except:
                 pack = Package().add('jsonrpc', '2.0').\
                     add('error', {'code': -32601, 'message': 'Procedure not found.'}).add('id', input_id)
                 self.sendto(pack.get_json(), input_ip)
@@ -180,6 +217,7 @@ class Server(threading.Thread):
 
 
 if __name__ == '__main__':
+    print('Server start')
     server = Server()
     server.start()
     while True:
