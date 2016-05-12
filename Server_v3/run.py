@@ -161,11 +161,17 @@ class Server(threading.Thread):
     @json_rpc_method
     def con_to(self, *args):
         input_ip = args[0]
-        name = args[2]
+        name = args[2][0]
         if name in self.__dht:
             host_ip = self.__dht[name]
-            host = Package().add('con_to', host_ip).add('in_room', 'Server')
-            user = Package().add('con_to', input_ip).add('in_room', 'Server')
+            if input_ip == host_ip:
+                raise Exception('You already connect to room "%s".' % name)
+
+            host = Package().add('jsonrpc', '2.0')\
+                .add('result', ['con_to', 'Server', 'Server', host_ip]).add('id', args[1])
+            user = Package().add('jsonrpc', '2.0')\
+                .add('result', ['con_to', 'Server', 'Server', input_ip]).add('id', args[1])
+
             self.sendto(host.get_json(), input_ip)
             self.sendto(user.get_json(), host_ip)
 
