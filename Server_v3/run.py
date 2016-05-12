@@ -54,6 +54,9 @@ class DHT(object):
     def __contains__(self, item):
         return item in self.__dht
 
+    def only_keys(self):
+        return json.dumps([i for i in self.__dht.keys()])
+
     def __str__(self):
         return str(self.__dht)
 
@@ -138,8 +141,33 @@ class Server(threading.Thread):
     def get_rooms(self, *args):
         input_ip = args[0]
         input_id = args[1]
-        pack = Package().add('jsonrpc', '2.0').add('result', self.__dht.get_json()).add('id', input_id)
+        pack = Package().add('jsonrpc', '2.0').add('result', self.__dht.only_keys()).add('id', input_id)
         self.sendto(pack.get_json(), input_ip)
+
+    @json_rpc_method
+    def add_room(self, *args):
+        name = args[2][0]                      # get name
+        if name not in self.__dht:          # check room
+            self.__dht.add(name, args[0])   # add room
+        self.get_rooms(args[0], args[1])
+
+    @json_rpc_method
+    def del_room(self, *args):
+        name = args[2][0]  # get name
+        if name in self.__dht:  # check room
+            self.__dht.remove(name)  # del room
+        self.get_rooms(args[0], args[1])
+
+    @json_rpc_method
+    def con_to(self, *args):
+        input_ip = args[0]
+        name = args[2]
+        if name in self.__dht:
+            host_ip = self.__dht[name]
+            host = Package().add('con_to', host_ip).add('in_room', 'Server')
+            user = Package().add('con_to', input_ip).add('in_room', 'Server')
+            self.sendto(host.get_json(), input_ip)
+            self.sendto(user.get_json(), host_ip)
 
     def parse(self, data, input_ip):
         json_package = json.loads(data)
@@ -217,7 +245,7 @@ class Server(threading.Thread):
 
 
 if __name__ == '__main__':
-    print('Server start')
+    print('Server started...')
     server = Server()
     server.start()
     while True:
