@@ -54,6 +54,9 @@ class Server(threading.Thread):
 
         logging.warning('Server running...')
 
+    def __str__(self):
+        return self.__ROOM_HASH__.__str__()
+
     def parse_data(self, input_data):
         data, input_adr = input_data
         message = data.decode('utf-8')
@@ -95,7 +98,7 @@ class Server(threading.Thread):
                 else:
                     self.send_to('Room "%s" not found!' % strings[1], input_adr)
             elif command == 'get_rooms':
-                json_str = json.dumps(self.__ROOM_HASH__)
+                json_str = json.dumps(self.__ROOM_HASH__.keys())
                 self.send_to('rooms_list$%s' % json_str, input_adr)
             elif command == 'msg':
                 self.send_to('Hello from Server!', input_adr)
@@ -134,8 +137,6 @@ class Server(threading.Thread):
         self.sock.close()
 
 
-switch = {'rooms': lambda x: [print('"{0}" {1}'.format(i, x[i])) for i in x]}
-
 if __name__ == '__main__':
     argsList = None
 
@@ -149,15 +150,15 @@ if __name__ == '__main__':
 
     print('Start server...')
     while True:
-        arr = input('> ')
+        com = input('> ')
 
         '''stop server'''
-        if arr == 'exit':
+        if com == 'exit':
             server.stop()
             server.join()
             break
         else:
-            if (arr in switch.keys()) is True:
-                switch[arr](server.__ROOM_HASH__)
+            if com == 'rooms':
+                print(server)
             else:
-                print('Command "%s" not found!' % arr)
+                print('Command "%s" not found!' % com)
