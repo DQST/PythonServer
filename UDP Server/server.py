@@ -1,28 +1,11 @@
 import os
 import json
+import logging
 from threading import *
-from time import *
 import socket
 from sys import argv
 
-'''Help class'''
-
-
-class Help:
-    @staticmethod
-    def log(msg, file='log.txt'):
-        f = open(file, 'a')
-        f.write('{0} | {1}\n'.format(Help.ge_format_time(), msg))
-        f.close()
-
-    @staticmethod
-    def ge_format_time():
-        ti = localtime()
-        return '{0}.{1}.{2} {3}:{4}:{5}'.format(ti[2], ti[1], ti[0], ti[3], ti[4], ti[5])
-
-    @staticmethod
-    def cls():
-        os.system('cls' if os.name == 'nt' else 'clear')
+logging.basicConfig(filename='log.txt', filemode='a', level=logging.DEBUG, format='%(asctime)s %(message)s')
 
 
 '''Config class.'''
@@ -67,7 +50,7 @@ class Server:
         else:
             self.__ROOM_HASH__ = {}
 
-        Help.log('Server running...')
+        logging.warning('Server running...')
 
     def parse_data(self, input_data):
         data, input_adr = input_data
@@ -85,11 +68,11 @@ class Server:
             elif command == 'newroom':
                 if (strings[1] in self.__ROOM_HASH__.keys()) is True:
                     self.send_to('Error, room "%s" already exist!' % strings[1], input_adr)
-                    Help.log('[{0}] Error "{1}" already exist!'.format(ip_adr, strings[1]))
+                    logging.warning('[{0}] Error "{1}" already exist!'.format(ip_adr, strings[1]))
                 else:
                     self.__ROOM_HASH__[strings[1]] = input_adr
                     self.send_to('Room "%s" has been create!' % strings[1], input_adr)
-                    Help.log('[{0}] Create room "{1}"'.format(ip_adr, strings[1]))
+                    logging.warning('[{0}] Create room "{1}"'.format(ip_adr, strings[1]))
             elif command == 'contoroom':
                 res = None
                 if strings[1] in self.__ROOM_HASH__.keys():
@@ -97,7 +80,7 @@ class Server:
 
                 if res == input_adr:
                     self.send_to('You already connect to room: "%s"' % strings[1], input_adr)
-                    Help.log('Try connect [%s] with himself.' % ip_adr)
+                    logging.warning('Try connect [%s] with himself.' % ip_adr)
                     return
 
                 '''Do something with this shit!!!!'''
@@ -106,7 +89,7 @@ class Server:
                     user2 = input_adr[0] + ':' + str(input_adr[1])
                     self.send_to('tryconto$' + user1 + '$' + strings[1], input_adr)
                     self.send_to('tryconto$' + user2 + '$' + strings[1], res)
-                    Help.log('[{0}] connect to [{1}]'.format(input_adr, res))
+                    logging.warning('[{0}] connect to [{1}]'.format(input_adr, res))
                 else:
                     self.send_to('Room "%s" not found!' % strings[1], input_adr)
             elif command == 'get_rooms':
@@ -130,20 +113,20 @@ class Server:
                 '''Parse input data'''
                 self.parse_data(input_data)
             except Exception as error:
-                Help.log('---------------------')
-                Help.log('Server Error!')
-                Help.log('Error type: "%s"' % type(error))
-                Help.log('Error args: "%s"' % str(error.args))
-                Help.log('Error args: "%s"' % str(error))
-                Help.log('---------------------')
+                logging.warning('---------------------')
+                logging.warning('Server Error!')
+                logging.warning('Error type: "%s"' % type(error))
+                logging.warning('Error args: "%s"' % str(error.args))
+                logging.warning('Error args: "%s"' % str(error))
+                logging.warning('---------------------')
         else:
-            Help.log('receive stopped.')
+            logging.warning('receive stopped.')
 
     '''stop server here'''
 
     def stop(self):
         self.WORK = False
-        Help.log('Server stopped!')
+        logging.warning('Server stopped!')
         self.send_to('Stop...', ('127.0.0.1', 14801))
         Config.save(self.__ROOM_HASH__, 'table.json')
         self.sock.close()
@@ -164,6 +147,7 @@ if __name__ == '__main__':
     receiveThread.start()
 
     try:
+        print('Start server...')
         while True:
             arr = input('> ')
 
@@ -178,5 +162,5 @@ if __name__ == '__main__':
                 else:
                     print('Command "%s" not found!' % arr)
     except Exception as e:
-        Help.log('Server Error!')
-        Help.log('Error type: "%s"' % type(e))
+        logging.warning('Server Error!')
+        logging.warning('Error type: "%s"' % type(e))
