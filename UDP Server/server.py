@@ -1,7 +1,7 @@
 import os
 import json
 import logging
-from threading import *
+import threading
 import socket
 from sys import argv
 
@@ -30,10 +30,12 @@ class Config:
 '''Server class'''
 
 
-class Server:
+class Server(threading.Thread):
     """Server constructor"""
 
     def __init__(self, args=()):
+        threading.Thread.__init__(self)
+        self.setDaemon(True)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(args)
         self.WORK = True
@@ -105,7 +107,7 @@ class Server:
 
     '''receive input message'''
 
-    def receive(self):
+    def run(self):
         while self.WORK:
             try:
                 input_data = self.sock.recvfrom(1024)
@@ -143,24 +145,19 @@ if __name__ == '__main__':
         argsList = ('0.0.0.0', 14801)
 
     server = Server(argsList)
-    receiveThread = Thread(name='receive', target=server.receive)
-    receiveThread.start()
+    server.start()
 
-    try:
-        print('Start server...')
-        while True:
-            arr = input('> ')
+    print('Start server...')
+    while True:
+        arr = input('> ')
 
-            '''stop server'''
-            if arr == 'exit':
-                server.stop()
-                receiveThread.join()
-                break
+        '''stop server'''
+        if arr == 'exit':
+            server.stop()
+            server.join()
+            break
+        else:
+            if (arr in switch.keys()) is True:
+                switch[arr](server.__ROOM_HASH__)
             else:
-                if (arr in switch.keys()) is True:
-                    switch[arr](server.__ROOM_HASH__)
-                else:
-                    print('Command "%s" not found!' % arr)
-    except Exception as e:
-        logging.warning('Server Error!')
-        logging.warning('Error type: "%s"' % type(e))
+                print('Command "%s" not found!' % arr)
