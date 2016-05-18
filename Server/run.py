@@ -14,11 +14,6 @@ def easydecorator(fun):
     return fun
 
 
-def olo(method, *params):
-    s = {'ver': '0042', 'method': method, 'params': params}
-    return s
-
-
 class Service:
     def __init__(self, obj):
         self.__methods__ = {}
