@@ -137,18 +137,20 @@ class Server(threading.Thread):
 
     @easydecorator
     def con_to(self, *args):
-        input_addr, input_port = args[0]
+        input_adr, input_port = args[0]
         room_name = args[1][0]
         # TODO: room connection
         if room_name in self.__room_table__:
             room = self.__room_table__[room_name]
-            host_addr, host_port = room[0]
-            user_pack = Package().add('ver', '0042').add('method', 'con_to')\
-                .add('params', [room_name, host_addr + ':' + str(host_port)])
-            host_pack = Package().add('ver', '0042').add('method', 'con_to')\
-                .add('params', [room_name, input_addr + ':' + str(input_port)])
-            self.send(user_pack.get_json(), (input_addr, input_port))
-            self.send(host_pack.get_json(), (host_addr, host_port))
+            host_adr, host_port = room[0]
+
+            if (input_adr, input_port) != (host_adr, host_port):
+                user_pack = Package().add('ver', '0042').add('method', 'con_to')\
+                    .add('params', [room_name, host_adr + ':' + str(host_port)])
+                host_pack = Package().add('ver', '0042').add('method', 'con_to')\
+                    .add('params', [room_name, input_adr + ':' + str(input_port)])
+                self.send(user_pack.get_json(), (input_adr, input_port))
+                self.send(host_pack.get_json(), (host_adr, host_port))
 
     @easydecorator
     def get_rooms(self, *args):
