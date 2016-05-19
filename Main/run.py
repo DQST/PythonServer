@@ -34,10 +34,6 @@ class Service:
             self.__methods__[method_name](*args, **kargs)
 
 
-def hash_password(password):
-    return hashlib.md5(password.encode()).hexdigest()
-
-
 class DHT(object):
     def __init__(self):
         self.__dht = {}
