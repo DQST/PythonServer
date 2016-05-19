@@ -113,14 +113,10 @@ class Server(threading.Thread):
     @easydecorator
     def add_room(self, *args):
         input_ip = args[0]
-        if len(args[1]) == 1:
-            room_name = args[1][0]
-            if room_name not in self.__room_table__:
-                self.__room_table__.add(room_name, [input_ip, ''])
-        elif len(args[1]) == 2:
-            room_name = args[1][0]
-            if room_name not in self.__room_table__:
-                self.__room_table__.add(room_name, [input_ip, hash_password(args[1][1])])
+        room_name = args[1][0]
+        room_pass = args[1][1]
+        if room_name not in self.__room_table__:
+            self.__room_table__.add(room_name, [input_ip, room_pass])
         self.get_rooms(args[0], args[1])
 
     @easydecorator
@@ -139,7 +135,7 @@ class Server(threading.Thread):
         if room_name in self.__room_table__:
             room = self.__room_table__[room_name]
 
-            if room[1] == hash_password(room_pass):
+            if room[1] == room_pass:
                 host_adr, host_port = room[0]
 
                 if (input_adr, input_port) != (host_adr, host_port):
