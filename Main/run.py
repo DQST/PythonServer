@@ -2,7 +2,6 @@ import json
 import logging
 import threading
 import socket
-import hashlib
 import os
 
 
