@@ -48,12 +48,6 @@ class Users:
         if ip in self.__users__:
             self.__users__.remove(ip)
 
-    def is_exists(self, ip):
-        for i in self.__users__:
-            if i == ip:
-                return True
-        return False
-
     def get_users(self):
         return self.__users__
 
