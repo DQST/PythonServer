@@ -119,10 +119,13 @@ class Server(threading.Thread):
     def con_to(self, *args):
         user_ip = args[0]
         room_name = args[1][0]
+        user_name = args[1][1]
+        message = '--- User "%s" connect to room ---' % user_name
         users = self.__rooms__[room_name]
         users.add(user_ip)
         olo = get_olo('con_to', [room_name])
         self.send(olo, user_ip)
+        self.__rooms__.broadcast(room_name, 'Server', message, user_ip, self)
 
     @decorator
     def broadcast_all_in_room(self, *args):
