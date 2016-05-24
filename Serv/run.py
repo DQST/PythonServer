@@ -3,6 +3,8 @@ import logging
 import threading
 import socket
 import time
+import os
+import pickle
 
 
 logging.basicConfig(filename='log.txt', filemode='a', level=logging.DEBUG, format='%(asctime)s %(message)s')
@@ -75,12 +77,15 @@ class Server(threading.Thread):
         super().start()
         logging.warning('Start Server...')
         print('Start Server...')
+        self.__rooms__.load()
 
     def stop(self):
         self.__WORK__ = False
         self.send('stop...', ('127.0.0.1', 14801))
         self.sock.close()
+        self.__rooms__.save()
         logging.warning('Server stopped!')
+        print('Server stopped!')
 
     def send(self, data, ip):
         self.sock.sendto(bytes(data, 'utf-8'), ip)
@@ -180,6 +185,21 @@ class RoomManager:
                 if i != input_ip:
                     olo = oloprotocol('push_message', [name, user, msg])
                     serv.send(olo, i)
+
+    def save(self, path='rooms.data'):
+        dump = pickle.dumps(self.__rooms__, protocol=0)
+        f = open(path, 'wb')
+        f.write(dump)
+        f.close()
+
+    def load(self, path='rooms.data'):
+        if os.path.exists(path) is True:
+            f = open(path, 'rb')
+            data = f.read()
+            f.close()
+            self.__rooms__ = pickle.loads(data)
+        else:
+            logging.warning('File "%s" not found!' % path)
 
     def get_rooms(self):
         return json.dumps([i for i in self.__rooms__.keys()])
