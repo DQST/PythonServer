@@ -41,11 +41,11 @@ class Users:
         self.__users__ = []
 
     def add(self, ip):
-        if not self.is_exists(ip):
+        if ip not in self.__users__:
             self.__users__.append(ip)
 
     def remove(self, ip):
-        if self.is_exists(ip):
+        if ip in self.__users__:
             self.__users__.remove(ip)
 
     def is_exists(self, ip):
