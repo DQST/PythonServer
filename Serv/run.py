@@ -31,9 +31,6 @@ class Service:
             except:
                 pass
 
-    def __str__(self):
-        return [i for i in self.__methods__.keys()]
-
     def call(self, method_name, *args, **kargs):
         if method_name in self.__methods__.keys():
             self.__methods__[method_name](*args, **kargs)
