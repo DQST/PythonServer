@@ -9,7 +9,7 @@ import pickle
 logging.basicConfig(filename='log.txt', filemode='a', level=logging.DEBUG, format='%(asctime)s %(message)s')
 
 
-def oloprotocol(method, args):
+def get_olo(method, args):
     olo = {'ver': '0042', 'method': method, 'params': args}
     return json.dumps(olo)
 
@@ -114,7 +114,7 @@ class Server(threading.Thread):
         users = Users()
         users.add(user_ip)
         self.__rooms__.add(room_name, users)
-        olo = oloprotocol('con_to', [room_name])
+        olo = get_olo('con_to', [room_name])
         self.send(olo, user_ip)
         self.get_rooms(*args)
 
@@ -130,7 +130,7 @@ class Server(threading.Thread):
         room_name = args[1][0]
         users = self.__rooms__[room_name]
         users.add(user_ip)
-        olo = oloprotocol('con_to', [room_name])
+        olo = get_olo('con_to', [room_name])
         self.send(olo, user_ip)
 
     @decorator
@@ -145,7 +145,7 @@ class Server(threading.Thread):
     def get_rooms(self, *args):
         user_ip = args[0]
         data = self.__rooms__.get_rooms()
-        olo = oloprotocol('room_list', data)
+        olo = get_olo('room_list', data)
         self.send(olo, user_ip)
 
 
@@ -170,7 +170,7 @@ class RoomManager:
             users = self.__rooms__[name]
             for i in users.get_users():
                 if i != input_ip:
-                    olo = oloprotocol('push_message', [name, user, msg])
+                    olo = get_olo('push_message', [name, user, msg])
                     serv.send(olo, i)
 
     def save(self, path='rooms.data'):
