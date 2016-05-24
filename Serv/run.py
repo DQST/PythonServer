@@ -139,6 +139,15 @@ class Server(threading.Thread):
         olo = get_olo('room_list', data)
         self.send(olo, user_ip)
 
+    @decorator
+    def disconnect_from(self, *args):
+        user_ip = args[0]
+        room_name = args[1][0]
+        user_name = args[1][1]
+        message = '--- User "%s" disconnect from room ---' % user_name
+        self.__rooms__[room_name].remove(user_ip)
+        self.__rooms__.broadcast(room_name, 'Server', message, user_ip, self)
+
 
 class RoomManager:
     def __init__(self):
