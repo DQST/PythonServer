@@ -69,7 +69,6 @@ class Server(threading.Thread):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(('0.0.0.0', 14801))
         self.__WORK__ = True
-        self.__USER_CON__ = dict()
         self.__service__ = Service(self)
         self.__rooms__ = RoomManager()
 
