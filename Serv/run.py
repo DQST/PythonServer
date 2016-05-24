@@ -150,17 +150,6 @@ class Server(threading.Thread):
         olo = oloprotocol('room_list', data)
         self.send(olo, user_ip)
 
-    @decorator
-    def nop(self, *args):
-        cur_time = time.time()
-        user_name = args[1][0]
-        if user_name in self.__USER_CON__.keys():
-            last_time = self.__USER_CON__[user_name][0]
-            if cur_time - last_time > 10.0:
-                self.__USER_CON__[user_name][1] = False
-        else:
-            self.__USER_CON__[user_name] = [cur_time, True]
-
 
 class RoomManager:
     def __init__(self):
