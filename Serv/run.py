@@ -4,9 +4,14 @@ import threading
 import socket
 import os
 import pickle
+import hashlib
 
 
 logging.basicConfig(filename='log.txt', filemode='a', level=logging.DEBUG, format='%(asctime)s %(message)s')
+
+
+def get_hash(s):
+    return hashlib.sha256(s.encode('utf-8')).hexdigest()
 
 
 def get_olo(method, args):
@@ -101,31 +106,35 @@ class Server(threading.Thread):
     @decorator
     def add_room(self, *args):
         user_ip = args[0]
-        room_name = args[1][0]
+        room_name, user_name, room_pass = args[1]
         users = Users()
         users.add(user_ip)
-        self.__rooms__.add(room_name, users)
+        self.__rooms__.add(room_name, {'users': users, 'pass': get_hash(room_pass), 'owner': user_name})
         olo = get_olo('con_to', [room_name])
         self.send(olo, user_ip)
         self.get_rooms(*args)
 
     @decorator
     def del_room(self, *args):
-        room_name = args[1][0]
-        self.__rooms__.remove(room_name)
-        self.get_rooms(*args)
+        room_name, user_name, input_pass = args[1]
+        password = self.__rooms__[room_name]['pass']
+        owner = self.__rooms__[room_name]['owner']
+        if (get_hash(input_pass) == password) and (owner == user_name):
+            self.__rooms__.remove(room_name)
+            self.get_rooms(*args)
 
     @decorator
     def con_to(self, *args):
         user_ip = args[0]
-        room_name = args[1][0]
-        user_name = args[1][1]
-        message = '--- User "%s" connect to room ---' % user_name
-        users = self.__rooms__[room_name]
-        users.add(user_ip)
-        olo = get_olo('con_to', [room_name])
-        self.send(olo, user_ip)
-        self.__rooms__.broadcast(room_name, 'Server', message, user_ip, self)
+        room_name, user_name, room_pass = args[1]
+        password = self.__rooms__[room_name]['pass']
+        if get_hash(room_pass) == password:
+            message = '--- User "%s" connect to room ---' % user_name
+            users = self.__rooms__[room_name]['users']
+            users.add(user_ip)
+            olo = get_olo('con_to', [room_name])
+            self.send(olo, user_ip)
+            self.__rooms__.broadcast(room_name, 'Server', message, user_ip, self)
 
     @decorator
     def broadcast_all_in_room(self, *args):
@@ -156,9 +165,9 @@ class RoomManager:
     def __init__(self):
         self.__rooms__ = dict()
 
-    def add(self, name, users: Users):
+    def add(self, name, obj):
         if name not in self.__rooms__.keys():
-            self.__rooms__[name] = users
+            self.__rooms__[name] = obj
 
     def remove(self, name):
         if name in self.__rooms__.keys():
@@ -170,7 +179,7 @@ class RoomManager:
 
     def broadcast(self, name, user, msg, input_ip, serv: Server):
         if name in self.__rooms__.keys():
-            users = self.__rooms__[name]
+            users = self.__rooms__[name]['users']
             for i in users.get_users():
                 if i != input_ip:
                     olo = get_olo('push_message', [name, user, msg])
