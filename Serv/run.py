@@ -127,6 +127,7 @@ class Server(threading.Thread):
         self.__rooms__.save()
         logging.warning('Server stopped!')
         print('Server stopped!')
+        super()._stop()
 
     def send(self, data, ip):
         self.sock.sendto(bytes(data, 'utf-8'), ip)
