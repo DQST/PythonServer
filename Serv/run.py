@@ -213,8 +213,12 @@ class Server(threading.Thread):
         self.__rooms__.broadcast(room_name, 'Server', message, user_ip, self)
 
     @decorator
-    def load_file(self, *args):
-        pass
+    def file_load(self, *args):
+        user_ip = args[0]
+        room_name = args[1][0]
+        user_name = args[1][1]
+        message = args[1][2]
+        self.__rooms__.broadcast(room_name, user_name, message, user_ip, self, 'push_file')
 
 
 class RoomManager:
@@ -233,12 +237,12 @@ class RoomManager:
         if item in self.__rooms__.keys():
             return self.__rooms__[item]
 
-    def broadcast(self, name, user, msg, input_ip, serv: Server):
+    def broadcast(self, name, user, msg, input_ip, serv: Server, method='push_message'):
         if name in self.__rooms__.keys():
             users = self.__rooms__[name]['users']
             for i in users.get_users():
                 if i != input_ip:
-                    olo = get_olo('push_message', [name, user, msg])
+                    olo = get_olo(method, [name, user, msg])
                     serv.send(olo, i)
 
     def save(self, path='rooms.data'):
