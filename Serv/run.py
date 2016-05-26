@@ -67,6 +67,12 @@ class FileServer(threading.Thread):
         self.__WORK__ = True
         self.__I__ = 0
 
+    def start(self):
+        super().start()
+        logging.warning('File Server start...')
+        if os.path.exists(os.getcwd() + '\\downloads\\') is False:
+            os.mkdir(os.getcwd() + '\\downloads\\')
+
     def run(self):
         while self.__WORK__:
             try:
