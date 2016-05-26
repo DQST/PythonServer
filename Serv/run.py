@@ -70,8 +70,8 @@ class FileServer(threading.Thread):
     def start(self):
         super().start()
         logging.warning('File Server start...')
-        if os.path.exists(os.getcwd() + '\\downloads\\') is False:
-            os.mkdir(os.getcwd() + '\\downloads\\')
+        if os.path.exists(os.getcwd() + '/downloads') is False:
+            os.mkdir(os.getcwd() + '/downloads')
 
     def run(self):
         while self.__WORK__:
@@ -82,14 +82,14 @@ class FileServer(threading.Thread):
                     data = conn.recv(1028)
                     head = data[:4]
                     if head == b'\x00\x00\x00\x01':
-                        path = os.getcwd() + '\\downloads\\.part_' + str(self.__I__)
+                        path = os.getcwd() + '/downloads/.part_' + str(self.__I__)
                         f = open(path, 'ab')
                         f.write(data[4:])
                         f.close()
 
                     if head == b'0002':
                         h, file_name = data.decode('utf-8').split(':')
-                        path = os.getcwd() + '\\downloads\\'
+                        path = os.getcwd() + '/downloads/'
                         if os.path.exists(path + '.part_' + str(self.__I__)) is True:
                             os.rename(path + '.part_' + str(self.__I__), path + file_name)
 
