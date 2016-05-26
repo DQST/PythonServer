@@ -107,7 +107,6 @@ class FileServer(threading.Thread):
     def stop(self):
         self.__WORK__ = False
         self.sock.close()
-        super()._stop()
 
 
 class Server(threading.Thread):
