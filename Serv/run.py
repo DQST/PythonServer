@@ -132,7 +132,6 @@ class Server(threading.Thread):
         self.__rooms__.save()
         logging.warning('Server stopped!')
         print('Server stopped!')
-        super()._stop()
 
     def send(self, data, ip):
         self.sock.sendto(bytes(data, 'utf-8'), ip)
@@ -212,6 +211,10 @@ class Server(threading.Thread):
         message = '--- User "%s" disconnect from room ---' % user_name
         self.__rooms__[room_name].remove(user_ip)
         self.__rooms__.broadcast(room_name, 'Server', message, user_ip, self)
+
+    @decorator
+    def load_file(self, *args):
+        pass
 
 
 class RoomManager:
