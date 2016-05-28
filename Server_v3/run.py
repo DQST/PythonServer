@@ -141,7 +141,8 @@ class Server(threading.Thread):
     def get_rooms(self, *args):
         input_ip = args[0]
         input_id = args[1]
-        pack = Package().add('jsonrpc', '2.0').add('result', self.__dht.only_keys()).add('id', input_id)
+        pack = Package().add('jsonrpc', '2.0').add('method', 'set_room_list')\
+            .add('params', self.__dht.only_keys()).add('id', input_id)
         self.sendto(pack.get_json(), input_ip)
 
     @json_rpc_method
@@ -165,12 +166,12 @@ class Server(threading.Thread):
         if name in self.__dht:
             host_ip = self.__dht[name]
             if input_ip == host_ip:
-                raise Exception('You already connect to room "%s".' % name)
+                return
 
-            host = Package().add('jsonrpc', '2.0')\
-                .add('result', ['con_to', 'Server', 'Server', host_ip]).add('id', args[1])
-            user = Package().add('jsonrpc', '2.0')\
-                .add('result', ['con_to', 'Server', 'Server', input_ip]).add('id', args[1])
+            host = Package().add('jsonrpc', '2.0').add('method', 'con_to')\
+                .add('params', ['con_to', 'Server', 'Server', host_ip]).add('id', args[1])
+            user = Package().add('jsonrpc', '2.0').add('method', 'con_to')\
+                .add('params', ['con_to', 'Server', 'Server', input_ip]).add('id', args[1])
 
             self.sendto(host.get_json(), input_ip)
             self.sendto(user.get_json(), host_ip)

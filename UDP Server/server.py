@@ -98,7 +98,7 @@ class Server(threading.Thread):
                 else:
                     self.send_to('Room "%s" not found!' % strings[1], input_adr)
             elif command == 'get_rooms':
-                json_str = json.dumps(self.__ROOM_HASH__.keys())
+                json_str = json.dumps([i for i in self.__ROOM_HASH__.keys()])
                 self.send_to('rooms_list$%s' % json_str, input_adr)
             elif command == 'msg':
                 self.send_to('Hello from Server!', input_adr)
