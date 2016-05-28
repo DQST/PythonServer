@@ -119,10 +119,9 @@ class Server(threading.Thread):
 
     @decorator
     def del_room(self, *args):
-        room_name, user_name, input_pass = args[1]
-        password = self.__rooms__[room_name]['pass']
+        room_name, user_key = args[1]
         owner = self.__rooms__[room_name]['owner']
-        if (get_hash(input_pass) == password) and (owner == user_name):
+        if owner == user_key:
             self.__rooms__.remove(room_name)
             self.get_rooms(*args)
 
