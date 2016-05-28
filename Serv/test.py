@@ -45,8 +45,7 @@ class ClientThread(Thread):
                     f.close()
                     buf = b'0002:' + file_name.encode('utf-8') + b':'
                     self.sock.send(buf)
-                    data = None
-                    os.remove(path)
+                    self.sock.close()
 
             if not data:
                 self.sock.close()
