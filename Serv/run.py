@@ -57,58 +57,6 @@ class Users:
         return self.__users__
 
 
-class FileServer(threading.Thread):
-    def __init__(self):
-        threading.Thread.__init__(self)
-        self.setDaemon(True)
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.bind(('0.0.0.0', 14801))
-        self.sock.listen(10)
-        self.__WORK__ = True
-        self.__I__ = 0
-
-    def start(self):
-        super().start()
-        logging.warning('File Server start...')
-        if os.path.exists(os.getcwd() + '/downloads') is False:
-            os.mkdir(os.getcwd() + '/downloads')
-
-    def run(self):
-        while self.__WORK__:
-            try:
-                conn, addr = self.sock.accept()
-                conn.settimeout(60)
-                while True:
-                    data = conn.recv(1028)
-                    head = data[:4]
-                    if head == b'\x00\x00\x00\x01':
-                        path = os.getcwd() + '/downloads/.part_' + str(self.__I__)
-                        f = open(path, 'ab')
-                        f.write(data[4:])
-                        f.close()
-
-                    if head == b'0002':
-                        h, file_name = data.decode('utf-8').split(':')
-                        path = os.getcwd() + '/downloads/'
-                        if os.path.exists(path + '.part_' + str(self.__I__)) is True:
-                            os.rename(path + '.part_' + str(self.__I__), path + file_name)
-
-                    if not data:
-                        break
-                self.__I__ += 1
-                conn.close()
-            except Exception as error:
-                logging.warning('----------------------------------------')
-                logging.warning('Type: "%s"' % type(error))
-                logging.warning('Exception: "%s"' % str(error))
-                logging.warning('Exception args: "%s"' % str(error.args))
-                logging.warning('----------------------------------------')
-
-    def stop(self):
-        self.__WORK__ = False
-        self.sock.close()
-
-
 class Server(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
@@ -124,6 +72,9 @@ class Server(threading.Thread):
         logging.warning('Start Server...')
         print('Start Server...')
         self.__rooms__.load()
+        path = os.getcwd() + '/downloads/'
+        if os.path.exists(path) is False:
+            os.mkdir(path)
 
     def stop(self):
         self.__WORK__ = False
@@ -265,8 +216,6 @@ class RoomManager:
 
 
 if __name__ == '__main__':
-    files = FileServer()
-    files.start()
     server = Server()
     server.start()
     while True:
@@ -274,8 +223,6 @@ if __name__ == '__main__':
         if command == 'exit':
             server.stop()
             server.join()
-            files.stop()
-            files.join()
             break
         else:
             print('Unknown command "%s"' % command)
