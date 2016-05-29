@@ -34,6 +34,10 @@ class ClientThread(Thread):
                 h, file_name = data.decode('utf-8').split(':')
                 path = os.getcwd() + '/downloads/' + file_name
                 if os.path.exists(path) is True:
+                    size = os.path.getsize(path)
+                    parts, ost = divmod(size, 1024)
+                    buf = b'0000:' + str(parts).encode('utf-8') + b':'
+                    self.sock.send(buf)
                     f = open(path, 'rb')
                     buf = b'0001'
                     buf += f.read(1024)
