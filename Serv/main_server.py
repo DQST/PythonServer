@@ -131,12 +131,12 @@ class Server(threading.Thread):
         room_name, user_name, room_pass = args[1]
         password = self.__rooms__[room_name]['pass']
         if get_hash(room_pass) == password:
-            message = '--- User "%s" connect to room ---' % user_name
+            message = '--- Пользователь "%s" присоеденился ---' % user_name
             users = self.__rooms__[room_name]['users']
             users.add(user_ip)
             olo = get_olo('con_to', [room_name])
             self.send(olo, user_ip)
-            self.__rooms__.broadcast(room_name, 'Server', message, user_ip, self)
+            self.__rooms__.broadcast(room_name, 'Сервер', message, user_ip, self)
 
     @decorator
     def broadcast_all_in_room(self, *args):
@@ -158,9 +158,9 @@ class Server(threading.Thread):
         user_ip = args[0]
         room_name = args[1][0]
         user_name = args[1][1]
-        message = '--- User "%s" disconnect from room ---' % user_name
-        self.__rooms__[room_name].remove(user_ip)
-        self.__rooms__.broadcast(room_name, 'Server', message, user_ip, self)
+        message = '--- Пользователь "%s" отсоеденился ---' % user_name
+        self.__rooms__[room_name]['users'].remove(user_ip)
+        self.__rooms__.broadcast(room_name, 'Сервер', message, user_ip, self)
 
     @decorator
     def file_load(self, *args):
