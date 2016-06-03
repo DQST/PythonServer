@@ -5,6 +5,7 @@ import socket
 import os
 import pickle
 import hashlib
+import sqlite3
 
 
 logging.basicConfig(filename='log.txt', filemode='a', level=logging.DEBUG, format='%(asctime)s %(message)s')
@@ -75,6 +76,21 @@ class Server(threading.Thread):
         path = os.getcwd() + '/downloads/'
         if os.path.exists(path) is False:
             os.mkdir(path)
+
+        con = sqlite3.connect('base.db')
+
+        try:
+            con.execute('''SELECT * FROM users''')
+        except sqlite3.OperationalError:
+            print('Create table users...')
+            con.execute('''
+                CREATE TABLE users(id INT PRIMARY KEY NOT NULL, login VARCHAR(100) NOT NULL, pass VARCHAR(100) NOT NULL)
+            ''')
+            con.execute('''
+                INSERT INTO users(id, login, pass) VALUES(0,"{0}", "{1}")
+            '''.format('admin', get_hash('admin')))
+            con.commit()
+        con.close()
 
     def stop(self):
         self.__WORK__ = False
@@ -169,6 +185,37 @@ class Server(threading.Thread):
         user_name = args[1][1]
         message = args[1][2]
         self.__rooms__.broadcast(room_name, user_name, message, user_ip, self, 'push_file')
+
+    @decorator
+    def login(self, *args):
+        input_login = args[1][0]
+        input_pass = get_hash(args[1][1])
+        con = sqlite3.connect('base.db')
+        rez = con.execute('SELECT id FROM users WHERE login = "%s" AND pass = "%s"' %
+                                      (input_login, input_pass))
+
+        if len(rez.fetchall()) > 0:
+            olo = get_olo('enter', ['Добро пожаловать'])
+            self.send(olo, args[0])
+        else:
+            olo = get_olo('error', ['Ошибка, неверный логин или пароль.'])
+            self.send(olo, args[0])
+        con.close()
+
+    @decorator
+    def register(self, *args):
+        new_login = args[1][0]
+        new_pass = args[1][1]
+        con = sqlite3.connect('base.db')
+        rez = con.execute('SELECT id FROM users WHERE login = "%s"' %
+                                      new_login)
+        if len(rez.fetchall()) > 0:
+            olo = get_olo('error', ['Ошибка, пользователь с таким логином уже зарегестрирован!'])
+            self.send(olo, args[0])
+        else:
+            con.execute('INSERT INTO users(login, pass) VALUES("%s", "%s")' %
+                                    (new_login, get_hash(new_pass)))
+        con.close()
 
 
 class RoomManager:
