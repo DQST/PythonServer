@@ -191,9 +191,7 @@ class Server(threading.Thread):
         input_login = args[1][0]
         input_pass = get_hash(args[1][1])
         con = sqlite3.connect('base.db')
-        rez = con.execute('SELECT id FROM users WHERE login = "%s" AND pass = "%s"' %
-                                      (input_login, input_pass))
-
+        rez = con.execute('SELECT id FROM users WHERE login = "%s" AND pass = "%s"' % (input_login, input_pass))
         if len(rez.fetchall()) > 0:
             olo = get_olo('enter', ['Добро пожаловать'])
             self.send(olo, args[0])
@@ -207,14 +205,21 @@ class Server(threading.Thread):
         new_login = args[1][0]
         new_pass = args[1][1]
         con = sqlite3.connect('base.db')
-        rez = con.execute('SELECT id FROM users WHERE login = "%s"' %
-                                      new_login)
+        rez = con.execute('SELECT id FROM users WHERE login = "%s"' % new_login)
         if len(rez.fetchall()) > 0:
-            olo = get_olo('error', ['Ошибка, пользователь с таким логином уже зарегестрирован!'])
+            olo = get_olo('error', ['Ошибка, такой аккаунт уже зарегестрирован!'])
             self.send(olo, args[0])
         else:
-            con.execute('INSERT INTO users(login, pass) VALUES("%s", "%s")' %
-                                    (new_login, get_hash(new_pass)))
+            rez = con.execute('SELECT id FROM users')
+            last_id = None
+            for i in rez:
+                for l in i:
+                    last_id = l
+            con.execute('INSERT INTO users(id, login, pass) VALUES(%d,"%s", "%s")' %
+                        (last_id + 1, new_login, get_hash(new_pass)))
+            con.commit()
+            olo = get_olo('reg_ok', ['Регистрация прошла успешно!'])
+            self.send(olo, args[0])
         con.close()
 
 
