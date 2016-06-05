@@ -100,7 +100,7 @@ class Server(threading.Thread):
             ''')
             con.execute('''
                 CREATE TABLE Users_Rooms (
-                    id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+                    id	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
                     user_id	INTEGER,
                     room_id	INTEGER,
                     FOREIGN KEY(user_id) REFERENCES Users(user_id),
@@ -118,7 +118,6 @@ class Server(threading.Thread):
                     FOREIGN KEY(sender) REFERENCES Users(user_id)
                 )
             ''')
-            con.execute('CREATE TABLE sqlite_sequence(name,seq)')
             con.commit()
         con.close()
 
@@ -233,20 +232,16 @@ class Server(threading.Thread):
     @decorator
     def register(self, *args):
         new_login = args[1][0]
-        new_pass = args[1][1]
+        new_nickname = args[1][1]
+        new_pass = args[1][2]
         con = sqlite3.connect('base.db')
-        rez = con.execute('SELECT id FROM users WHERE login = "%s"' % new_login)
+        rez = con.execute('SELECT user_id FROM Users WHERE user_login = "%s"' % new_login)
         if len(rez.fetchall()) > 0:
             olo = get_olo('error', ['Ошибка, такой аккаунт уже зарегестрирован!'])
             self.send(olo, args[0])
         else:
-            rez = con.execute('SELECT id FROM users')
-            last_id = None
-            for i in rez:
-                for l in i:
-                    last_id = l
-            con.execute('INSERT INTO users(id, login, pass) VALUES(%d,"%s", "%s")' %
-                        (last_id + 1, new_login, get_hash(new_pass)))
+            con.execute('INSERT INTO users(user_login, user_pass, user_name) VALUES("%s", "%s", "%s")' %
+                        (new_login, get_hash(new_pass), new_nickname))
             con.commit()
             olo = get_olo('reg_ok', ['Регистрация прошла успешно!'])
             self.send(olo, args[0])
