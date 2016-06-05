@@ -226,6 +226,17 @@ class Server(threading.Thread):
         self.get_rooms(*args)
 
     @decorator
+    def del_room(self, *args):
+        room_name, user_name = args[1]
+        con = sqlite3.connect('base.db')
+        rez = con.execute('SELECT user_id FROM Users WHERE user_name = "%s"' % user_name)
+        user_id = rez.fetchall()[0][0]
+        con.execute('DELETE FROM Rooms WHERE owner_id = %d and room_name = "%s"' % (user_id, room_name))
+        con.commit()
+        con.close()
+        self.get_rooms(*args)
+
+    @decorator
     def get_rooms(self, *args):
         con = sqlite3.connect('base.db')
         cur = con.execute('SELECT room_name FROM Rooms')
