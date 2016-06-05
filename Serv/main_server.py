@@ -196,6 +196,8 @@ class Server(threading.Thread):
             con.execute('INSERT INTO Rooms(room_name, room_pass, owner_id) values("%s", "%s", %d)' %
                         (room_name, get_hash(room_pass), _id))
             con.commit()
+        else:
+            pass    # TODO: This must be message if room exists
         con.close()
         self.get_rooms(*args)
 
@@ -238,6 +240,22 @@ class Server(threading.Thread):
             self.send(olo, args[0])
         else:
             pass    # TODO: This must be message about incorrect password
+        con.close()
+
+    @decorator
+    def broadcast_all_in_room(self, *args):
+        room_name, user_name, message = args[1]
+        con = sqlite3.connect('base.db')
+        rez = con.execute('''
+            SELECT user_ip FROM Users as us WHERE EXISTS
+            (SELECT user_id FROM Users_Rooms as us_ro WHERE us.user_id = us_ro.user_id AND room_id = 1)
+        ''')
+        l = rez.fetchall()
+        if len(l) > 0:
+            for i in l:
+                ip, port = i[0].split(':')
+                olo = get_olo('push_message', [room_name, user_name, message])
+                self.send(olo, (ip, int(port)))
         con.close()
 
     @decorator
