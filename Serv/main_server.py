@@ -80,15 +80,45 @@ class Server(threading.Thread):
         con = sqlite3.connect('base.db')
 
         try:
-            con.execute('''SELECT * FROM users''')
+            con.execute('SELECT * FROM Users')
         except sqlite3.OperationalError:
-            print('Create table users...')
+            print('Создание таблиц...')
             con.execute('''
-                CREATE TABLE users(id INT PRIMARY KEY NOT NULL, login VARCHAR(100) NOT NULL, pass VARCHAR(100) NOT NULL)
+                CREATE TABLE Users (
+                    user_id	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+                    user_login	TEXT NOT NULL,
+                    user_pass	TEXT NOT NULL,
+                    user_name	TEXT NOT NULL
+                )
             ''')
             con.execute('''
-                INSERT INTO users(id, login, pass) VALUES(0,"{0}", "{1}")
-            '''.format('admin', get_hash('admin')))
+                CREATE TABLE Rooms (
+                    room_id	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+                    room_name	TEXT NOT NULL,
+                    room_pass	TEXT NOT NULL
+                )
+            ''')
+            con.execute('''
+                CREATE TABLE Users_Rooms (
+                    id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+                    user_id	INTEGER,
+                    room_id	INTEGER,
+                    FOREIGN KEY(user_id) REFERENCES Users(user_id),
+                    FOREIGN KEY(room_id) REFERENCES Rooms(room_id)
+                )
+            ''')
+            con.execute('''
+                CREATE TABLE "History" (
+                    hist_id	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+                    room_id	INTEGER,
+                    send_date	TEXT,
+                    sender	INTEGER,
+                    message	TEXT,
+                    FOREIGN KEY(room_id) REFERENCES Rooms(room_id),
+                    FOREIGN KEY(sender) REFERENCES Users(user_id)
+                )
+            ''')
+            con.execute('CREATE TABLE sqlite_sequence(name,seq)')
             con.commit()
         con.close()
 
