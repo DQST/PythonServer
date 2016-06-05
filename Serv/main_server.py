@@ -218,10 +218,23 @@ class Server(threading.Thread):
         zap = con.execute('SELECT user_id FROM Users WHERE user_name = "%s"' % user_name)
         l = zap.fetchall()
         if len(l) > 0:
-            id = l[0][0]
-            con.execute('INSERT INTO Rooms(room_name, room_pass, owner_id) values("%s", "%s", %d)' % (room_name, room_pass, id))
+            _id = l[0][0]
+            con.execute('INSERT INTO Rooms(room_name, room_pass, owner_id) values("%s", "%s", %d)' %
+                        (room_name, get_hash(room_pass), _id))
             con.commit()
         con.close()
+        self.get_rooms(*args)
+
+    @decorator
+    def get_rooms(self, *args):
+        con = sqlite3.connect('base.db')
+        cur = con.execute('SELECT room_name FROM Rooms')
+        arr = []
+        for i in cur:
+            arr.append(i[0])
+        con.close()
+        olo = get_olo('room_list', json.dumps(arr))
+        self.send(olo, args[0])
 
     @decorator
     def file_load(self, *args):
