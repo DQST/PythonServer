@@ -238,24 +238,30 @@ class Server(threading.Thread):
             con.commit()
             olo = get_olo('con_to', [room_name])
             self.send(olo, args[0])
+            self.broadcast_all_in_room(args[0], (room_name, 'Сервер', 'Пользователь "%s" присоеденился к комнате' %
+                                                 user_name))
         else:
             pass    # TODO: This must be message about incorrect password
         con.close()
 
     @decorator
-    def broadcast_all_in_room(self, *args):
+    def broadcast_all_in_room(self, *args):     # TODO: Save history of message in table!
         room_name, user_name, message = args[1]
         con = sqlite3.connect('base.db')
-        rez = con.execute('''
-            SELECT user_ip FROM Users as us WHERE EXISTS
-            (SELECT user_id FROM Users_Rooms as us_ro WHERE us.user_id = us_ro.user_id AND room_id = 1)
-        ''')
-        l = rez.fetchall()
+        cur = con.execute('SELECT room_id FROM Rooms WHERE room_name = "%s"' % room_name)
+        l = cur.fetchall()
         if len(l) > 0:
-            for i in l:
-                ip, port = i[0].split(':')
-                olo = get_olo('push_message', [room_name, user_name, message])
-                self.send(olo, (ip, int(port)))
+            room_id = l[0][0]
+            rez = con.execute('''
+                SELECT user_ip FROM Users as us WHERE EXISTS
+                (SELECT user_id FROM Users_Rooms as us_ro WHERE us.user_id = us_ro.user_id AND room_id = %d)
+            ''' % room_id)
+            l = rez.fetchall()
+            if len(l) > 0:
+                for i in l:
+                    ip, port = i[0].split(':')
+                    olo = get_olo('push_message', [room_name, user_name, message])
+                    self.send(olo, (ip, int(port)))
         con.close()
 
     @decorator
