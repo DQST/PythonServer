@@ -96,7 +96,9 @@ class Server(threading.Thread):
                 CREATE TABLE Rooms (
                     room_id	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
                     room_name	TEXT NOT NULL,
-                    room_pass	TEXT NOT NULL
+                    room_pass	TEXT NOT NULL,
+                    owner_id	INTEGER NOT NULL,
+                    FOREIGN KEY(owner_id) REFERENCES Users(user_id)
                 )
             ''')
             con.execute('''
@@ -207,6 +209,19 @@ class Server(threading.Thread):
     #     message = '--- Пользователь "%s" отсоеденился ---' % user_name
     #     self.__rooms__[room_name]['users'].remove(user_ip)
     #     self.__rooms__.broadcast(room_name, 'Сервер', message, user_ip, self)
+
+    @decorator
+    def add_room(self, *args):
+        ip, port = args[0]
+        room_name, user_name, room_pass = args[1]
+        con = sqlite3.connect('base.db')
+        zap = con.execute('SELECT user_id FROM Users WHERE user_name = "%s"' % user_name)
+        l = zap.fetchall()
+        if len(l) > 0:
+            id = l[0][0]
+            con.execute('INSERT INTO Rooms(room_name, room_pass, owner_id) values("%s", "%s", %d)' % (room_name, room_pass, id))
+            con.commit()
+        con.close()
 
     @decorator
     def file_load(self, *args):
