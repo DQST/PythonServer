@@ -220,13 +220,15 @@ class Server(threading.Thread):
         input_login = args[1][0]
         input_pass = get_hash(args[1][1])
         con = sqlite3.connect('base.db')
-        rez = con.execute('SELECT id FROM users WHERE login = "%s" AND pass = "%s"' % (input_login, input_pass))
-        if len(rez.fetchall()) > 0:
-            olo = get_olo('enter', ['Добро пожаловать'])
-            self.send(olo, args[0])
+        rez = con.execute('SELECT user_id, user_name FROM Users WHERE user_login = "%s" AND user_pass = "%s"' %
+                          (input_login, input_pass))
+        olo = None
+        l = rez.fetchall()
+        if len(l) > 0:
+            olo = get_olo('enter', ['Добро пожаловать %s!' % l[0][1], l[0][1]])
         else:
             olo = get_olo('error', ['Ошибка, неверный логин или пароль.'])
-            self.send(olo, args[0])
+        self.send(olo, args[0])
         con.close()
 
     @decorator
