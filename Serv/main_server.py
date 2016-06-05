@@ -155,25 +155,6 @@ class Server(threading.Thread):
             self.__service__.call(method, ip, params)
 
     # @decorator
-    # def add_room(self, *args):
-    #     user_ip = args[0]
-    #     room_name, user_name, room_pass = args[1]
-    #     users = Users()
-    #     users.add(user_ip)
-    #     self.__rooms__.add(room_name, {'users': users, 'pass': get_hash(room_pass), 'owner': user_name})
-    #     olo = get_olo('con_to', [room_name])
-    #     self.send(olo, user_ip)
-    #     self.get_rooms(*args)
-    #
-    # @decorator
-    # def del_room(self, *args):
-    #     room_name, user_key = args[1]
-    #     owner = self.__rooms__[room_name]['owner']
-    #     if owner == user_key:
-    #         self.__rooms__.remove(room_name)
-    #         self.get_rooms(*args)
-    #
-    # @decorator
     # def con_to(self, *args):
     #     user_ip = args[0]
     #     room_name, user_name, room_pass = args[1]
@@ -193,13 +174,6 @@ class Server(threading.Thread):
     #     user_name = args[1][1]
     #     message = args[1][2]
     #     self.__rooms__.broadcast(room_name, user_name, message, user_ip, self)
-    #
-    # @decorator
-    # def get_rooms(self, *args):
-    #     user_ip = args[0]
-    #     data = self.__rooms__.get_rooms()
-    #     olo = get_olo('room_list', data)
-    #     self.send(olo, user_ip)
     #
     # @decorator
     # def disconnect_from(self, *args):
@@ -246,6 +220,25 @@ class Server(threading.Thread):
         con.close()
         olo = get_olo('room_list', json.dumps(arr))
         self.send(olo, args[0])
+
+    @decorator
+    def con_to(self, *args):
+        room_name, user_name, room_pass = args[1]
+        con = sqlite3.connect('base.db')
+        cur = con.execute('SELECT room_id FROM Rooms WHERE room_name = "%s" and room_pass = "%s"' %
+                          (room_name, get_hash(room_pass)))
+        l = cur.fetchall()
+        if len(l) > 0:
+            room_id = l[0][0]
+            rez = con.execute('SELECT user_id FROM Users WHERE user_name = "%s"' % user_name)
+            user_id = rez.fetchall()[0][0]
+            con.execute('INSERT INTO Users_Rooms(user_id, room_id) VALUES(%d, %d)' % (user_id, room_id))
+            con.commit()
+            olo = get_olo('con_to', [room_name])
+            self.send(olo, args[0])
+        else:
+            pass    # TODO: This must be message about incorrect password
+        con.close()
 
     @decorator
     def file_load(self, *args):
