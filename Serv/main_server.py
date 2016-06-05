@@ -42,22 +42,6 @@ class Service:
             self.__methods__[method_name](*args, **kargs)
 
 
-class Users:
-    def __init__(self):
-        self.__users__ = []
-
-    def add(self, ip):
-        if ip not in self.__users__:
-            self.__users__.append(ip)
-
-    def remove(self, ip):
-        if ip in self.__users__:
-            self.__users__.remove(ip)
-
-    def get_users(self):
-        return self.__users__
-
-
 class Server(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
@@ -66,13 +50,11 @@ class Server(threading.Thread):
         self.sock.bind(('0.0.0.0', 14801))
         self.__WORK__ = True
         self.__service__ = Service(self)
-        self.__rooms__ = RoomManager()
 
     def start(self):
         super().start()
         logging.warning('Start Server...')
         print('Start Server...')
-        self.__rooms__.load()
         path = os.getcwd() + '/downloads/'
         if os.path.exists(path) is False:
             os.mkdir(path)
@@ -128,7 +110,6 @@ class Server(threading.Thread):
         self.__WORK__ = False
         self.send('stop...', ('127.0.0.1', 14801))
         self.sock.close()
-        self.__rooms__.save()
         logging.warning('Server stopped!')
         print('Server stopped!')
 
@@ -254,7 +235,7 @@ class Server(threading.Thread):
         room_name = args[1][0]
         user_name = args[1][1]
         message = args[1][2]
-        self.__rooms__.broadcast(room_name, user_name, message, user_ip, self, 'push_file')
+        # self.__rooms__.broadcast(room_name, user_name, message, user_ip, self, 'push_file')
 
     @decorator
     def login(self, *args):
@@ -294,50 +275,6 @@ class Server(threading.Thread):
             olo = get_olo('reg_ok', ['Регистрация прошла успешно!'])
             self.send(olo, args[0])
         con.close()
-
-
-class RoomManager:
-    def __init__(self):
-        self.__rooms__ = dict()
-
-    def add(self, name, obj):
-        if name not in self.__rooms__.keys():
-            self.__rooms__[name] = obj
-
-    def remove(self, name):
-        if name in self.__rooms__.keys():
-            del self.__rooms__[name]
-
-    def __getitem__(self, item):
-        if item in self.__rooms__.keys():
-            return self.__rooms__[item]
-
-    def broadcast(self, name, user, msg, input_ip, serv: Server, method='push_message'):
-        if name in self.__rooms__.keys():
-            users = self.__rooms__[name]['users']
-            for i in users.get_users():
-                if i != input_ip:
-                    olo = get_olo(method, [name, user, msg])
-                    serv.send(olo, i)
-
-    def save(self, path='rooms.data'):
-        dump = pickle.dumps(self.__rooms__, protocol=0)
-        f = open(path, 'wb')
-        f.write(dump)
-        f.close()
-
-    def load(self, path='rooms.data'):
-        if os.path.exists(path) is True:
-            f = open(path, 'rb')
-            data = f.read()
-            f.close()
-            self.__rooms__ = pickle.loads(data)
-        else:
-            logging.warning('File "%s" not found!' % path)
-
-    def get_rooms(self):
-        return json.dumps([i for i in self.__rooms__.keys()])
-
 
 if __name__ == '__main__':
     server = Server()
