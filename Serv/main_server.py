@@ -196,7 +196,7 @@ class Server(threading.Thread):
         con.close()
 
     @decorator
-    def broadcast_all_in_room(self, *args):     # TODO: Save history of message in table!
+    def broadcast_all_in_room(self, *args, method='push_message'):     # TODO: Save history of message in table!
         room_name, user_name, message = args[1]
         con = sqlite3.connect('base.db')
         cur = con.execute('SELECT room_id FROM Rooms WHERE room_name = "%s"' % room_name)
@@ -211,7 +211,7 @@ class Server(threading.Thread):
             if len(l) > 0:
                 for i in l:
                     ip, port = i[0].split(':')
-                    olo = get_olo('push_message', [room_name, user_name, message])
+                    olo = get_olo(method, [room_name, user_name, message])
                     self.send(olo, (ip, int(port)))
         con.close()
 
@@ -231,11 +231,7 @@ class Server(threading.Thread):
 
     @decorator
     def file_load(self, *args):
-        user_ip = args[0]
-        room_name = args[1][0]
-        user_name = args[1][1]
-        message = args[1][2]
-        # self.__rooms__.broadcast(room_name, user_name, message, user_ip, self, 'push_file')
+        self.broadcast_all_in_room(*args, method='push_file')
 
     @decorator
     def login(self, *args):
