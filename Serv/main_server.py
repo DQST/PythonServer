@@ -218,6 +218,7 @@ class Server(threading.Thread):
 
     @decorator
     def login(self, *args):
+        _ip, _port = args[0]
         input_login = args[1][0]
         input_pass = get_hash(args[1][1])
         con = sqlite3.connect('base.db')
@@ -226,6 +227,9 @@ class Server(threading.Thread):
         olo = None
         l = rez.fetchall()
         if len(l) > 0:
+            con.execute('UPDATE Users SET user_ip = "%s" WHERE user_login = "%s"' %
+                        (_ip + ':' + str(_port), input_login))
+            con.commit()
             olo = get_olo('enter', ['Добро пожаловать %s!' % l[0][1], l[0][1]])
         else:
             olo = get_olo('error', ['Ошибка, неверный логин или пароль.'])
@@ -234,6 +238,7 @@ class Server(threading.Thread):
 
     @decorator
     def register(self, *args):
+        _ip, _port = args[0]
         new_login = args[1][0]
         new_nickname = args[1][1]
         new_pass = args[1][2]
@@ -243,8 +248,8 @@ class Server(threading.Thread):
             olo = get_olo('error', ['Ошибка, такой аккаунт уже зарегестрирован!'])
             self.send(olo, args[0])
         else:
-            con.execute('INSERT INTO users(user_login, user_pass, user_name) VALUES("%s", "%s", "%s")' %
-                        (new_login, get_hash(new_pass), new_nickname))
+            con.execute('INSERT INTO users(user_login, user_pass, user_name, user_ip) VALUES("%s", "%s", "%s", "%s")' %
+                        (new_login, get_hash(new_pass), new_nickname, _ip + ':' + str(_port)))
             con.commit()
             olo = get_olo('reg_ok', ['Регистрация прошла успешно!'])
             self.send(olo, args[0])
