@@ -154,36 +154,6 @@ class Server(threading.Thread):
             params = pack['params']
             self.__service__.call(method, ip, params)
 
-    # @decorator
-    # def con_to(self, *args):
-    #     user_ip = args[0]
-    #     room_name, user_name, room_pass = args[1]
-    #     password = self.__rooms__[room_name]['pass']
-    #     if get_hash(room_pass) == password:
-    #         message = '--- Пользователь "%s" присоеденился ---' % user_name
-    #         users = self.__rooms__[room_name]['users']
-    #         users.add(user_ip)
-    #         olo = get_olo('con_to', [room_name])
-    #         self.send(olo, user_ip)
-    #         self.__rooms__.broadcast(room_name, 'Сервер', message, user_ip, self)
-    #
-    # @decorator
-    # def broadcast_all_in_room(self, *args):
-    #     user_ip = args[0]
-    #     room_name = args[1][0]
-    #     user_name = args[1][1]
-    #     message = args[1][2]
-    #     self.__rooms__.broadcast(room_name, user_name, message, user_ip, self)
-    #
-    # @decorator
-    # def disconnect_from(self, *args):
-    #     user_ip = args[0]
-    #     room_name = args[1][0]
-    #     user_name = args[1][1]
-    #     message = '--- Пользователь "%s" отсоеденился ---' % user_name
-    #     self.__rooms__[room_name]['users'].remove(user_ip)
-    #     self.__rooms__.broadcast(room_name, 'Сервер', message, user_ip, self)
-
     @decorator
     def add_room(self, *args):
         ip, port = args[0]
@@ -263,6 +233,20 @@ class Server(threading.Thread):
                     olo = get_olo('push_message', [room_name, user_name, message])
                     self.send(olo, (ip, int(port)))
         con.close()
+
+    @decorator
+    def disconnect_from(self, *args):
+        room_name, user_name = args[1]
+        con = sqlite3.connect('base.db')
+        rez = con.execute('SELECT user_id FROM Users WHERE user_name = "%s"' % user_name)
+        user_id = rez.fetchall()[0][0]
+        rez = con.execute('SELECT room_id FROM Rooms WHERE room_name = "%s"' % room_name)
+        room_id = rez.fetchall()[0][0]
+        con.execute('DELETE FROM Users_Rooms WHERE user_id = %d and room_id = %d' % (user_id, room_id))
+        con.commit()
+        con.close()
+        self.broadcast_all_in_room(args[0], (room_name, 'Сервер', 'Пользователь "%s" отключился от комнаты' %
+                                             user_name))
 
     @decorator
     def file_load(self, *args):
