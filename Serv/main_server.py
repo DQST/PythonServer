@@ -88,7 +88,8 @@ class Server(threading.Thread):
                     user_id	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
                     user_login	TEXT NOT NULL,
                     user_pass	TEXT NOT NULL,
-                    user_name	TEXT NOT NULL
+                    user_name	TEXT NOT NULL,
+                    user_ip     TEXT NOT NULL
                 )
             ''')
             con.execute('''
