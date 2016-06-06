@@ -65,35 +65,29 @@ class Server(threading.Thread):
             con.execute('SELECT * FROM Users')
         except sqlite3.OperationalError:
             print('Создание таблиц...')
-            con.execute('''
+            con.executescript('''
                 CREATE TABLE Users (
                     user_id	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
                     user_login	TEXT NOT NULL,
                     user_pass	TEXT NOT NULL,
                     user_name	TEXT NOT NULL,
                     user_ip     TEXT NOT NULL
-                )
-            ''')
-            con.execute('''
+                );
                 CREATE TABLE Rooms (
                     room_id	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
                     room_name	TEXT NOT NULL,
                     room_pass	TEXT NOT NULL,
                     owner_id	INTEGER NOT NULL,
                     FOREIGN KEY(owner_id) REFERENCES Users(user_id)
-                )
-            ''')
-            con.execute('''
+                );
                 CREATE TABLE Users_Rooms (
                     id	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
                     user_id	INTEGER,
                     room_id	INTEGER,
                     FOREIGN KEY(user_id) REFERENCES Users(user_id),
                     FOREIGN KEY(room_id) REFERENCES Rooms(room_id)
-                )
-            ''')
-            con.execute('''
-                CREATE TABLE "History" (
+                );
+                CREATE TABLE History (
                     hist_id	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
                     room_id	INTEGER,
                     send_date	TEXT,
