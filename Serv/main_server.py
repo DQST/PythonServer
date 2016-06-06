@@ -3,7 +3,6 @@ import logging
 import threading
 import socket
 import os
-import pickle
 import hashlib
 import sqlite3
 
