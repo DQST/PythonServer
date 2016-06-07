@@ -58,18 +58,27 @@ class Server(threading.Thread):
 
     def start(self):
         super().start()
-        logging.warning('Start Server...')
-        print('Start Server...')
+        logging.warning('Запуск сервера...')
+        logging.warning('Проверка рабочих директорий...')
+        print('Запуск сервера...')
+        print('Проверка рабочих директорий...')
         path = os.getcwd() + '/downloads/'
         if os.path.exists(path) is False:
+            logging.warning('Создание директорий...')
+            print('Создание директорий...')
             os.mkdir(path)
 
         con = sqlite3.connect('base.db')
 
+        logging.warning('Проверка базы...')
+        print('Проверка базы...')
         try:
             con.execute('SELECT * FROM Users')
+            logging.warning('База статус: ОК')
+            print('База статус: ОК')
         except sqlite3.OperationalError:
-            print('Создание таблиц...')
+            logging.warning('Создание базы...')
+            print('Создание базы...')
             con.executescript('''
                 CREATE TABLE Users (
                     user_id	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
@@ -109,8 +118,8 @@ class Server(threading.Thread):
         self.__WORK__ = False
         self.send('stop...', ('127.0.0.1', 14801))
         self.sock.close()
-        logging.warning('Server stopped!')
-        print('Server stopped!')
+        logging.warning('Остановка сервера!')
+        print('Остановка сервера!')
 
     def send(self, data, ip):
         self.sock.sendto(bytes(data, 'utf-8'), ip)
