@@ -300,9 +300,9 @@ class Server(threading.Thread):
             con.execute('UPDATE Users SET user_ip = "%s" WHERE user_login = "%s"' %
                         (_ip + ':' + str(_port), input_login))
             con.commit()
-            olo = get_olo('enter', ['Добро пожаловать %s!' % l[0][1], l[0][1]])
+            olo = get_olo('enter', ('Добро пожаловать %s!' % l[0][1], l[0][1], l[0][0]))
         else:
-            olo = get_olo('error', ['Ошибка, неверный логин или пароль.'])
+            olo = get_olo('error', ('Ошибка, неверный логин или пароль.',))
         self.send(olo, args[0])
         con.close()
 
