@@ -5,6 +5,7 @@ import socket
 import os
 import hashlib
 import sqlite3
+import datetime
 
 
 logging.basicConfig(filename='log.txt', filemode='a', level=logging.DEBUG, format='%(asctime)s %(message)s')
@@ -200,6 +201,12 @@ class Server(threading.Thread):
                 SELECT user_ip FROM Users as us WHERE EXISTS
                 (SELECT user_id FROM Users_Rooms as us_ro WHERE us.user_id = us_ro.user_id AND room_id = %d)
             ''' % room_id)
+            date_now = datetime.datetime.now()
+            date_str = date_now.strftime('%d.%m.%y %H:%M')
+            con.execute('''
+                INSERT INTO History(room_id, send_date, sender, message) VALUES(%d, "%s", "%s", "%s")
+            ''' % (room_id, date_str, user_name, message))
+            con.commit()
             l = rez.fetchall()
             if len(l) > 0:
                 for i in l:
