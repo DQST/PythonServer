@@ -275,7 +275,6 @@ class Server(threading.Thread):
                 date, time = i[0].split(' ')
                 sender = i[1]
                 message = i[2]
-                date_time_str = None
                 if date == current_date:
                     date_time_str = time
                 else:
@@ -313,7 +312,6 @@ class Server(threading.Thread):
         con = sqlite3.connect('base.db')
         rez = con.execute('SELECT user_id, user_name FROM Users WHERE user_login = "%s" AND user_pass = "%s"' %
                           (input_login, input_pass))
-        olo = None
         l = rez.fetchall()
         if len(l) > 0:
             con.execute('UPDATE Users SET user_ip = "%s" WHERE user_login = "%s"' %
