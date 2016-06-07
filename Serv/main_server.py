@@ -197,6 +197,16 @@ class Server(threading.Thread):
         self.broadcast_all_in_room(args[0], (room_name, 'Сервер', users), method='push_users')
 
     @decorator
+    def change_nickname(self, *args):
+        user_id, user_name = args[1]
+        con = sqlite3.connect('base.db')
+        con.execute('UPDATE Users SET user_name = ? WHERE user_id = ?', (user_name, user_id))
+        con.commit()
+        con.close()
+        olo = get_olo('set_nickname', [user_name])
+        self.send(olo, args[0])
+
+    @decorator
     def broadcast_all_in_room(self, *args, method='push_message'):
         room_name, user_name, message = args[1]
         con = sqlite3.connect('base.db')
