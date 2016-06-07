@@ -214,7 +214,8 @@ class Server(threading.Thread):
                 for i in l:
                     ip, port = i[0].split(':')
                     if (ip, port) != last_ip:
-                        olo = get_olo(method, [room_name, '{0} {1}'.format(get_datetime(), user_name), message])
+                        time = get_datetime().split(' ')[1]
+                        olo = get_olo(method, [room_name, '{0} {1}'.format(time, user_name), message])
                         self.send(olo, (ip, int(port)))
                     last_ip = (ip, port)
         con.close()
@@ -241,12 +242,18 @@ class Server(threading.Thread):
         rez = con.execute('SELECT send_date, sender, message FROM History WHERE room_id = %d'
                           % room_id)
         l = rez.fetchall()
+        current_date, current_time = get_datetime().split(' ')
         if len(l) > 0:
             for i in l:
-                date_str = i[0]
+                date, time = i[0].split(' ')
                 sender = i[1]
                 message = i[2]
-                olo = get_olo('push_message', [room_name, '{0} {1}'.format(date_str, sender), message])
+                date_time_str = None
+                if date == current_date:
+                    date_time_str = time
+                else:
+                    date_time_str = '{0} {1}'.format(date, time)
+                olo = get_olo('push_message', [room_name, '{0} {1}'.format(date_time_str, sender), message])
                 self.send(olo, args[0])
         con.close()
 
