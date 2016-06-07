@@ -147,15 +147,19 @@ class Server(threading.Thread):
     def add_room(self, *args):
         room_name, user_name, room_pass = args[1]
         con = sqlite3.connect('base.db')
-        zap = con.execute('SELECT user_id FROM Users WHERE user_name = "%s"' % user_name)
-        l = zap.fetchall()
-        if len(l) > 0:
-            _id = l[0][0]
-            con.execute('INSERT INTO Rooms(room_name, room_pass, owner_id) values("%s", "%s", %d)' %
-                        (room_name, get_hash(room_pass), _id))
-            con.commit()
+        rez = con.execute('SELECT room_id FROM Rooms WHERE room_name = ?', (room_name,))
+        l = rez.fetchall()
+        if len(l) == 0:
+            rez = con.execute('SELECT user_id FROM Users WHERE user_name = "%s"' % user_name)
+            l = rez.fetchall()
+            if len(l) > 0:
+                _id = l[0][0]
+                con.execute('INSERT INTO Rooms(room_name, room_pass, owner_id) values("%s", "%s", %d)' %
+                            (room_name, get_hash(room_pass), _id))
+                con.commit()
         else:
-            pass    # TODO: This must be message if room exists
+            olo = get_olo('error', ('Комната "%s" уже существует!' % room_name,))
+            self.send(olo, args[0])
         con.close()
         self.get_rooms(*args)
 
