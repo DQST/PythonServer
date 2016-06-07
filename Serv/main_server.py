@@ -190,11 +190,12 @@ class Server(threading.Thread):
             self.broadcast_all_in_room(args[0], (room_name, 'Сервер', 'Пользователь %s присоеденился к комнате' %
                                                  user_name))
         else:
-            pass    # TODO: This must be message about incorrect password
+            olo = get_olo('error', ['Неверный пароль!'])
+            self.send(olo, args[0])
         con.close()
 
     @decorator
-    def broadcast_all_in_room(self, *args, method='push_message'):     # TODO: Save history of message in table!
+    def broadcast_all_in_room(self, *args, method='push_message'):
         room_name, user_name, message = args[1]
         con = sqlite3.connect('base.db')
         cur = con.execute('SELECT room_id FROM Rooms WHERE room_name = "%s"' % room_name)
@@ -256,6 +257,26 @@ class Server(threading.Thread):
                 olo = get_olo('push_message', [room_name, '{0} {1}'.format(date_time_str, sender), message])
                 self.send(olo, args[0])
         con.close()
+
+    @decorator
+    def get_users(self, *args):
+        room_name = args[1][0]
+        con = sqlite3.connect('base.db')
+        rez = con.execute('SELECT room_id FROM Rooms WHERE room_name = "%s"' % room_name)
+        room_id = rez.fetchall()[0][0]
+        rez = con.execute('SELECT user_id FROM Users_Rooms WHERE room_id = %d' % room_id)
+        user_id_list = []
+        for i in rez.fetchall():
+            user_id_list.append(i[0])
+        users = []
+        for i in user_id_list:
+            rez = con.execute('SELECT user_name FROM Users WHERE user_id = %d' % i)
+            rez = rez.fetchall()
+            users.append(rez[0])
+        con.close()
+        for user in users:
+            olo = get_olo('push_user', [room_name, user[0]])
+            self.send(olo, args[0])
 
     @decorator
     def file_load(self, *args):
