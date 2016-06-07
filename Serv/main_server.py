@@ -20,6 +20,11 @@ def get_olo(method, args):
     return json.dumps(olo)
 
 
+def get_datetime():
+    date_now = datetime.datetime.now()
+    return date_now.strftime('%d.%m.%y %H:%M')
+
+
 def decorator(fun):
     fun.is_wrapped = True
     return fun
@@ -131,7 +136,6 @@ class Server(threading.Thread):
 
     @decorator
     def add_room(self, *args):
-        ip, port = args[0]
         room_name, user_name, room_pass = args[1]
         con = sqlite3.connect('base.db')
         zap = con.execute('SELECT user_id FROM Users WHERE user_name = "%s"' % user_name)
@@ -183,7 +187,7 @@ class Server(threading.Thread):
             con.commit()
             olo = get_olo('con_to', [room_name])
             self.send(olo, args[0])
-            self.broadcast_all_in_room(args[0], (room_name, 'Сервер', 'Пользователь "%s" присоеденился к комнате' %
+            self.broadcast_all_in_room(args[0], (room_name, 'Сервер', 'Пользователь %s присоеденился к комнате' %
                                                  user_name))
         else:
             pass    # TODO: This must be message about incorrect password
@@ -198,21 +202,21 @@ class Server(threading.Thread):
         if len(l) > 0:
             room_id = l[0][0]
             rez = con.execute('''
-                SELECT user_ip FROM Users as us WHERE EXISTS
-                (SELECT user_id FROM Users_Rooms as us_ro WHERE us.user_id = us_ro.user_id AND room_id = %d)
+                SELECT DISTINCT user_ip FROM Users WHERE user_id
+                IN(SELECT DISTINCT user_id FROM Users_Rooms WHERE room_id = %d)
             ''' % room_id)
-            date_now = datetime.datetime.now()
-            date_str = date_now.strftime('%d.%m.%y %H:%M')
-            con.execute('''
-                INSERT INTO History(room_id, send_date, sender, message) VALUES(%d, "%s", "%s", "%s")
-            ''' % (room_id, date_str, user_name, message))
+            con.execute('INSERT INTO History(room_id, send_date, sender, message) VALUES(%d, "%s", "%s", "%s")' %
+                        (room_id, get_datetime(), user_name, message))
             con.commit()
             l = rez.fetchall()
+            last_ip = ()
             if len(l) > 0:
                 for i in l:
                     ip, port = i[0].split(':')
-                    olo = get_olo(method, [room_name, user_name, message])
-                    self.send(olo, (ip, int(port)))
+                    if (ip, port) != last_ip:
+                        olo = get_olo(method, [room_name, '{0} {1}'.format(get_datetime(), user_name), message])
+                        self.send(olo, (ip, int(port)))
+                    last_ip = (ip, port)
         con.close()
 
     @decorator
@@ -226,8 +230,25 @@ class Server(threading.Thread):
         con.execute('DELETE FROM Users_Rooms WHERE user_id = %d and room_id = %d' % (user_id, room_id))
         con.commit()
         con.close()
-        self.broadcast_all_in_room(args[0], (room_name, 'Сервер', 'Пользователь "%s" отключился от комнаты' %
-                                             user_name))
+        self.broadcast_all_in_room(args[0], (room_name, 'Сервер', 'Пользователь %s отключился от комнаты' % user_name))
+
+    @decorator
+    def get_history(self, *args):
+        room_name = args[1][0]
+        con = sqlite3.connect('base.db')
+        rez = con.execute('SELECT room_id FROM Rooms WHERE room_name = "%s"' % room_name)
+        room_id = rez.fetchall()[0][0]
+        rez = con.execute('SELECT send_date, sender, message FROM History WHERE room_id = %d'
+                          % room_id)
+        l = rez.fetchall()
+        if len(l) > 0:
+            for i in l:
+                date_str = i[0]
+                sender = i[1]
+                message = i[2]
+                olo = get_olo('push_message', [room_name, '{0} {1}'.format(date_str, sender), message])
+                self.send(olo, args[0])
+        con.close()
 
     @decorator
     def file_load(self, *args):
