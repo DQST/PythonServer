@@ -193,6 +193,8 @@ class Server(threading.Thread):
             olo = get_olo('error', ['Неверный пароль!'])
             self.send(olo, args[0])
         con.close()
+        users = self.get_users(room_name)
+        self.broadcast_all_in_room(args[0], (room_name, 'Сервер', users), method='push_users')
 
     @decorator
     def broadcast_all_in_room(self, *args, method='push_message'):
@@ -212,14 +214,15 @@ class Server(threading.Thread):
                 rez = con.execute('SELECT DISTINCT user_ip FROM Users WHERE user_id = %d' % i)
                 for j in rez.fetchall():
                     user_ip_list.append(j)
-            con.execute('INSERT INTO History(room_id, send_date, sender, message) VALUES(?, ?, ?, ?)',
-                        (room_id, get_datetime(), user_name, message))
-            con.commit()
+            if method != 'push_users':
+                con.execute('INSERT INTO History(room_id, send_date, sender, message) VALUES(?, ?, ?, ?)',
+                            (room_id, get_datetime(), user_name, message))
+                con.commit()
             if len(user_ip_list) > 0:
                 for i in user_ip_list:
                     ip, port = i[0].split(':')
                     time = get_datetime().split(' ')[1]
-                    olo = get_olo(method, [room_name, '{0} {1}'.format(time, user_name), message])
+                    olo = get_olo(method, (room_name, '{0} {1}'.format(time, user_name), message))
                     self.send(olo, (ip, int(port)))
         con.close()
 
@@ -235,6 +238,8 @@ class Server(threading.Thread):
         con.commit()
         con.close()
         self.broadcast_all_in_room(args[0], (room_name, 'Сервер', 'Пользователь %s отключился от комнаты' % user_name))
+        users = self.get_users(room_name)
+        self.broadcast_all_in_room(args[0], (room_name, 'Сервер', users), method='push_users')
 
     @decorator
     def get_history(self, *args):
@@ -260,9 +265,8 @@ class Server(threading.Thread):
                 self.send(olo, args[0])
         con.close()
 
-    @decorator
-    def get_users(self, *args):
-        room_name = args[1][0]
+    @staticmethod
+    def get_users(room_name):
         con = sqlite3.connect('base.db')
         rez = con.execute('SELECT room_id FROM Rooms WHERE room_name = "%s"' % room_name)
         room_id = rez.fetchall()[0][0]
@@ -274,11 +278,9 @@ class Server(threading.Thread):
         for i in user_id_list:
             rez = con.execute('SELECT user_name FROM Users WHERE user_id = %d' % i)
             rez = rez.fetchall()
-            users.append(rez[0])
+            users.append(rez[0][0])
         con.close()
-        for user in users:
-            olo = get_olo('push_user', [room_name, user[0]])
-            self.send(olo, args[0])
+        return users
 
     @decorator
     def file_load(self, *args):
