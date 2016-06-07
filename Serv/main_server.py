@@ -247,7 +247,7 @@ class Server(threading.Thread):
         con = sqlite3.connect('base.db')
         rez = con.execute('SELECT room_id FROM Rooms WHERE room_name = "%s"' % room_name)
         room_id = rez.fetchall()[0][0]
-        rez = con.execute('SELECT send_date, sender, message FROM History WHERE room_id = %d'
+        rez = con.execute('SELECT send_date, sender, message FROM History WHERE room_id = %d AND NOT sender = "Сервер"'
                           % room_id)
         l = rez.fetchall()
         current_date, current_time = get_datetime().split(' ')
