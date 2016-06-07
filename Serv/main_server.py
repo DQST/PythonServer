@@ -202,23 +202,25 @@ class Server(threading.Thread):
         l = cur.fetchall()
         if len(l) > 0:
             room_id = l[0][0]
-            rez = con.execute('''
-                SELECT DISTINCT user_ip FROM Users WHERE user_id
-                IN(SELECT DISTINCT user_id FROM Users_Rooms WHERE room_id = %d)
-            ''' % room_id)
-            con.execute('INSERT INTO History(room_id, send_date, sender, message) VALUES(%d, "%s", "%s", "%s")' %
+            id_list = []
+            rez = con.execute('SELECT DISTINCT user_id FROM Users_Rooms WHERE room_id = %d' % room_id)
+            for i in rez.fetchall():
+                id_list.append(i[0])
+
+            user_ip_list = []
+            for i in id_list:
+                rez = con.execute('SELECT DISTINCT user_ip FROM Users WHERE user_id = %d' % i)
+                for j in rez.fetchall():
+                    user_ip_list.append(j)
+            con.execute('INSERT INTO History(room_id, send_date, sender, message) VALUES(?, ?, ?, ?)',
                         (room_id, get_datetime(), user_name, message))
             con.commit()
-            l = rez.fetchall()
-            last_ip = ()
-            if len(l) > 0:
-                for i in l:
+            if len(user_ip_list) > 0:
+                for i in user_ip_list:
                     ip, port = i[0].split(':')
-                    if (ip, port) != last_ip:
-                        time = get_datetime().split(' ')[1]
-                        olo = get_olo(method, [room_name, '{0} {1}'.format(time, user_name), message])
-                        self.send(olo, (ip, int(port)))
-                    last_ip = (ip, port)
+                    time = get_datetime().split(' ')[1]
+                    olo = get_olo(method, [room_name, '{0} {1}'.format(time, user_name), message])
+                    self.send(olo, (ip, int(port)))
         con.close()
 
     @decorator
