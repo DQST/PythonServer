@@ -189,19 +189,24 @@ class Server(threading.Thread):
     def con_to(self, *args):
         room_name, user_name, room_pass = args[1]
         con = sqlite3.connect('base.db')
-        cur = con.execute('SELECT room_id FROM Rooms WHERE room_name = "%s" and room_pass = "%s"' %
+        cur = con.execute('SELECT room_id FROM Rooms WHERE room_name = ? and room_pass = ?',
                           (room_name, get_hash(room_pass)))
         l = cur.fetchall()
         if len(l) > 0:
             room_id = l[0][0]
-            rez = con.execute('SELECT user_id FROM Users WHERE user_name = "%s"' % user_name)
+            rez = con.execute('SELECT user_id FROM Users WHERE user_name = ?', (user_name,))
             user_id = rez.fetchall()[0][0]
-            con.execute('INSERT INTO Users_Rooms(user_id, room_id) VALUES(%d, %d)' % (user_id, room_id))
-            con.commit()
-            olo = get_olo('con_to', [room_name])
-            self.send(olo, args[0])
-            self.broadcast_all_in_room(args[0], (room_name, 'Сервер', 'Пользователь %s присоеденился к комнате' %
-                                                 user_name))
+            rez = con.execute('SELECT user_id FROM Users_Rooms WHERE user_id = ? AND room_id = ?', (user_id, room_id))
+            if len(rez.fetchall()) == 0:
+                con.execute('INSERT INTO Users_Rooms(user_id, room_id) VALUES(?, ?)' , (user_id, room_id))
+                con.commit()
+                olo = get_olo('con_to', [room_name])
+                self.send(olo, args[0])
+                self.broadcast_all_in_room(args[0], (room_name, 'Сервер', 'Пользователь %s присоеденился к комнате' %
+                                                     user_name))
+            else:
+                olo = get_olo('error', ['Вы уже подключены к этой комнате!'])
+                self.send(olo, args[0])
         else:
             olo = get_olo('error', ['Неверный пароль!'])
             self.send(olo, args[0])
