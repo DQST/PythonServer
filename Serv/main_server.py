@@ -198,7 +198,7 @@ class Server(threading.Thread):
             user_id = rez.fetchall()[0][0]
             rez = con.execute('SELECT user_id FROM Users_Rooms WHERE user_id = ? AND room_id = ?', (user_id, room_id))
             if len(rez.fetchall()) == 0:
-                con.execute('INSERT INTO Users_Rooms(user_id, room_id) VALUES(?, ?)' , (user_id, room_id))
+                con.execute('INSERT INTO Users_Rooms(user_id, room_id) VALUES(?, ?)', (user_id, room_id))
                 con.commit()
                 olo = get_olo('con_to', [room_name])
                 self.send(olo, args[0])
