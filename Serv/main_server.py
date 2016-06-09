@@ -275,11 +275,12 @@ class Server(threading.Thread):
         con = sqlite3.connect('base.db')
         rez = con.execute('SELECT room_id FROM Rooms WHERE room_name = "%s"' % room_name)
         room_id = rez.fetchall()[0][0]
-        rez = con.execute('SELECT send_date, sender, message FROM History WHERE room_id = %d AND NOT sender = "Сервер"'
-                          % room_id)
+        rez = con.execute('SELECT send_date, sender, message FROM History WHERE room_id = ? AND NOT sender = ?'
+                          ' ORDER BY hist_id DESC LIMIT 300', (room_id, 'Сервер'))
         l = rez.fetchall()
         current_date, current_time = get_datetime().split(' ')
         if len(l) > 0:
+            l.reverse()
             for i in l:
                 date, time = i[0].split(' ')
                 sender = i[1]
@@ -288,7 +289,7 @@ class Server(threading.Thread):
                     date_time_str = time
                 else:
                     date_time_str = '{0} {1}'.format(date, time)
-                olo = get_olo('push_message', [room_name, '{0} {1}'.format(date_time_str, sender), message])
+                olo = get_olo('push_message', (room_name, '{0} {1}'.format(date_time_str, sender), message))
                 self.send(olo, args[0])
         con.close()
 
