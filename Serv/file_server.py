@@ -37,6 +37,7 @@ class ClientThread(Thread):
 
                 if head == b'0003':
                     h, file_name = data.decode('utf-8').split(':')
+                    print('try send file %s' % file_name)
                     path = os.getcwd() + '/downloads/' + file_name
                     if os.path.exists(path) is True:
                         size = os.path.getsize(path)
@@ -54,10 +55,8 @@ class ClientThread(Thread):
                         f.close()
                         buf = b'0002:' + file_name.encode('utf-8') + b':'
                         self.sock.send(buf)
-                        self.sock.close()
 
                 if not data:
-                    self.sock.close()
                     break
             except Exception as error:
                 logging.warning('----------------------------------------')
