@@ -22,6 +22,7 @@ class ClientThread(Thread):
                 head = data[:4]
                 if head == b'0001':
                     path = os.getcwd() + '/downloads/.part_' + str(I)
+                    print('write into file .part_%d' % I)
                     f = open(path, 'ab')
                     f.write(data[4:])
                     f.close()
@@ -30,6 +31,7 @@ class ClientThread(Thread):
                     h, file_name = data.decode('utf-8').split(':')
                     path = os.getcwd() + '/downloads/'
                     if os.path.exists(path + '.part_' + str(I)) is True:
+                        print('rename file .part_%d to %s' % (I, file_name))
                         os.rename(path + '.part_' + str(I), path + file_name)
                         I += 1
 
@@ -41,7 +43,7 @@ class ClientThread(Thread):
                         parts, ost = divmod(size, 1024)
                         buf = b'0000:' + str(parts).encode('utf-8') + b':'
                         self.sock.send(buf)
-                        f = open(path, 'rb')
+                        f = open(path, 'r+b')
                         buf = b'0001'
                         buf += f.read(1024)
                         while True:
