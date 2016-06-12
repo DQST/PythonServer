@@ -348,7 +348,7 @@ class Server(threading.Thread):
             con.execute('INSERT INTO users(user_login, user_pass, user_name, user_ip) VALUES("%s", "%s", "%s", "%s")' %
                         (new_login, get_hash(new_pass), new_nickname, _ip + ':' + str(_port)))
             con.commit()
-            olo = get_olo('reg_ok', ['Регистрация прошла успешно!'])
+            olo = get_olo('reg_ok', ('Регистрация прошла успешно!',))
             self.send(olo, args[0])
         con.close()
 
