@@ -1,6 +1,7 @@
 import socket
 
 i = 0
+path = 'downloads/'
 
 
 def start():
@@ -13,9 +14,13 @@ def start():
         sc, address = s.accept()
         print('input connection: {0}'.format(address))
 
-        with open('file_%d.vf' % i, 'w+b') as file:
+        with open(path + 'file_%d.vf' % i, 'w+b') as file:
             while True:
                 l = sc.recv(1024)
+                if not l:
+                    i += 1
+                    break
+
                 while l:
                     file.write(l)
                     l = sc.recv(1024)
