@@ -46,16 +46,9 @@ def start():
                         sc.send(byte_array)
                         time.sleep(1)
                         with open(path + file, 'r+b') as file:
-                            while True:
-                                data = file.read(1024)
-                                while data:
-                                    r = sc.send(data)
-                                    if r == 4:
-                                        data = file.read(1024)
-                                    else:
-                                        continue
-                                if not data:
-                                    break
+                            fun = lambda x: sc.sendfile(x)
+                            if fun(file) != size:
+                                fun(file)
                     sc.close()
                 elif state == 'WRITE_IN_SELECT_FILE':
                     with open(select_file, 'w+b') as file:
