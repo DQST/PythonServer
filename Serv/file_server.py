@@ -49,8 +49,11 @@ def start():
                             while True:
                                 data = file.read(1024)
                                 while data:
-                                    sc.send(data)
-                                    data = file.read(1024)
+                                    r = sc.send(data)
+                                    if r == 4:
+                                        data = file.read(1024)
+                                    else:
+                                        continue
                                 if not data:
                                     break
                     sc.close()
