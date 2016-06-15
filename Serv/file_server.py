@@ -55,8 +55,8 @@ def start():
                     sc.close()
                 elif state == 'WRITE_IN_SELECT_FILE':
                     with open(select_file, 'w+b') as file:
-                        l = sc.recv(1024)
                         sc.send(b'NEXT')
+                        l = sc.recv(1024)
                         while l:
                             file.write(l)
                             sc.send(b'NEXT')
