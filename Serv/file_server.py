@@ -46,26 +46,24 @@ def start():
                         sc.send(byte_array)
                         time.sleep(1)
                         with open(path + file, 'r+b') as file:
-                            while True:
-                                data = file.read(1024)
-                                while data:
-                                    sc.send(data)
+                            data = file.read(1024)
+                            while data:
+                                sc.send(data)
+                                com = sc.recv(1024).decode('utf-8')
+                                if com == 'NEXT':
                                     data = file.read(1024)
-                                if not data:
-                                    break
                     sc.close()
                 elif state == 'WRITE_IN_SELECT_FILE':
                     with open(select_file, 'w+b') as file:
-                        while True:
+                        l = sc.recv(1024)
+                        while l:
+                            file.write(l)
+                            sc.send(b'NEXT')
                             l = sc.recv(1024)
-                            while l:
-                                file.write(l)
-                                l = sc.recv(1024)
-                            if not l:
-                                break
                     sc.close()
         except Exception as error:
             print(error)
     s.close()
 
-start()
+if __name__ == '__main__':
+    start()
