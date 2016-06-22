@@ -205,7 +205,7 @@ class Server(threading.Thread):
                 self.broadcast_all_in_room(args[0], (room_name, 'Сервер', 'Пользователь %s присоеденился к комнате' %
                                                      user_name))
             else:
-                olo = get_olo('error', ['Вы уже подключены к этой комнате!'])
+                olo = get_olo('con_to', [room_name])
                 self.send(olo, args[0])
         else:
             olo = get_olo('error', ['Неверный пароль!'])
